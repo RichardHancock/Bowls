@@ -12,6 +12,7 @@
 
 #include "Jack.h"
 #include "Bowl.h"
+#include "Box.h"
 
 cgg::MayaCamera g_camera;
 cgg::Mat43 g_model;
@@ -25,6 +26,7 @@ gl::RasterState* g_rasterState = 0;
 Jack* jack;
 Bowl* red;
 Bowl* blue;
+Box* ground;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -128,18 +130,17 @@ void loadAssets()
 	jack->render(g_prims);
 
 	// generate a box
-	maths::Mat43 m2 = maths::Mat43::kIdentity;
-	m2.w.x = 0;
-	m2.w.z = 0;
-	m2.w.y = -4;
+	m.w.x = 0;
+	m.w.z = 0;
+	m.w.y = -4;
 
-	maths::Vec3 colour2;
-	colour2.x = 0;
-	colour2.y = 1;
-	colour2.z = 0;
-	g_prims->box(m2, colour2, 40, 2, 10);
+	colour.x = 0;
+	colour.y = 1;
+	colour.z = 0;
+	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
+	ground->render(g_prims);
 
-	//End the group of primatives
+	//End the group of primitives
 	g_prims->end();
 	
 	
