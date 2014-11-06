@@ -1,0 +1,5 @@
+NAME game
+INCLUDE ./include/
+SHADERS ./assets/shaders/
+SOURCE ./src/
+INCLUDE_PATHS ./;./include
