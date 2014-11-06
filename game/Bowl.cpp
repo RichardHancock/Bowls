@@ -14,7 +14,7 @@ Bowl::Bowl(cgg::Mat43 transform, cgg::Vec3 colour, float radius)
 
 }
 
-void Bowl::render(gl::Primitives* g_prims)
+void Bowl::render(gl::Primitives* primitiveList)
 {
-	g_prims->sphere(transform, colour, radius);
+	primitiveList->sphere(transform, colour, radius);
 }

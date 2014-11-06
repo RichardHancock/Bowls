@@ -14,7 +14,7 @@ Jack::Jack(cgg::Mat43 transform, cgg::Vec3 colour, float radius)
 	
 }
 
-void Jack::render(gl::Primitives* g_prims)
+void Jack::render(gl::Primitives* primitiveList)
 {
-	g_prims->sphere(transform, colour, radius);
+	primitiveList->sphere(transform, colour, radius);
 }
