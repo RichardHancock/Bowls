@@ -3,6 +3,9 @@
 #pragma once
 #include "CollisionEntity.h"
 
+/// /class Ball
+/// Defines a sphere with physics
+
 class Ball : public CollisionEntity
 {
 public:
