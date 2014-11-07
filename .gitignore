@@ -153,3 +153,6 @@ $RECYCLE.BIN/
 
 .doxy
 .prefs
+/regen_build.prefs
+/game/game.doxy
+/game/regen_docs.bat
