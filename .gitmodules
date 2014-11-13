@@ -1,0 +1,3 @@
+[submodule "CGGM"]
+	path = CGGM
+	url = https://github.com/CGTBournemouth/CGGM.git

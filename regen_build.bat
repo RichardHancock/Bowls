@@ -1,1 +1,1 @@
-CGG\buildtools\regen\regenBuild.exe "Bowls" "CGG"
+CGGM\buildtools\regen\regenBuild.exe "Bowls" "CGGM"

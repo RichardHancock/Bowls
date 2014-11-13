@@ -1,1 +1,1 @@
-CGG\buildtools\RegenGUI.exe
+CGGM\buildtools\RegenGUI.exe

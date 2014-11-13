@@ -1,1 +1,1 @@
-git submodule add https://github.com/CGTBournemouth/CGG.git
+git submodule add https://github.com/CGTBournemouth/CGGM.git
