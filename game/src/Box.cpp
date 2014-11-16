@@ -3,7 +3,9 @@
 Box::Box(cgg::Mat43 transform)
 	:CollisionEntity(transform)
 {
-
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 1;
 }
 
 Box::Box(cgg::Mat43 transform, cgg::Vec3 colour, cgg::Vec3 dimensions)

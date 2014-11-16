@@ -80,9 +80,6 @@ void init()
 }
 
 /// Loads the assets for the game
-/// 
-/// 
-
 void loadAssets()
 {
 	// allocate new primitives

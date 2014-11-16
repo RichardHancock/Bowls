@@ -2,7 +2,10 @@
 
 Ball::Ball(cgg::Mat43 transform) : CollisionEntity(transform)
 {
-	
+	radius = 1;
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 0;
 }
 
 Ball::Ball(cgg::Mat43 transform, cgg::Vec3 colour, float radius) 
@@ -11,10 +14,6 @@ Ball::Ball(cgg::Mat43 transform, cgg::Vec3 colour, float radius)
 
 }
 
-/// /brief Renders the Ball object
-///
-/// Uses the passed in g_prims to save a sphere object with the 
-/// internal transform, colour and radius.
 void Ball::render(gl::Primitives* primitiveList)
 {
 	primitiveList->sphere(transform, colour, radius);
