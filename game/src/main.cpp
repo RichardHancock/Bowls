@@ -65,6 +65,18 @@ void custom_gl_draw(gl::Device* device)
 	// grab camera matrix from the maya camera controller
 	g_camera.computeInverseCameraMatrix(g_view);
 	g_view.makeGL();
+	
+	g_prims = new gl::Primitives;
+	g_prims->initGL(cgg::getGlDevice());
+	g_prims->begin();
+
+	jack->render(g_prims);
+	red->render(g_prims);
+	blue->render(g_prims);
+	ground->render(g_prims);
+
+	g_prims->end();
+	;
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
@@ -124,7 +136,7 @@ void loadAssets()
 	colour.y = 1;
 	colour.z = 0;
 	jack = new Jack(m, colour, 0.5);
-	jack->render(g_prims);
+	
 
 	// generate a box
 	m.w.x = 0;
@@ -173,6 +185,10 @@ void kill()
 {
 }
 
+// Dirty Global for movement (REMOVE LATER)
+bool Forwards = true;
+bool Forwards2 = true;
+
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
 /// the game was updated. Use 'dt' when animating things in your game.
@@ -183,6 +199,46 @@ void update(float dt)
 	{
 		exit(0);
 	}
+	
+	//Quick Hack for movement
+	int speed = 4;
+	if (Forwards)
+	{
+		red->changePosition(cgg::Vec3(speed * dt, 0, 0));
+	}
+	else
+	{
+		red->changePosition(cgg::Vec3(-speed * dt, 0, 0));
+	}
+
+	if (red->getPosition().x >= 20.0)
+	{
+		Forwards = false;
+	}
+	if (red->getPosition().x <= -20.0)
+	{
+		Forwards = true;
+	}
+
+	//blue
+	if (Forwards2)
+	{
+		blue->changePosition(cgg::Vec3(0, 0, speed * dt));
+	}
+	else
+	{
+		blue->changePosition(cgg::Vec3(0, 0, -speed * dt));
+	}
+
+	if (blue->getPosition().z >= 5.0)
+	{
+		Forwards2 = false;
+	}
+	if (blue->getPosition().z <= -5.0)
+	{
+		Forwards2 = true;
+	}
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
