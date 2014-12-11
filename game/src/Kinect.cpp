@@ -29,8 +29,7 @@ bool KinectInput::initSensor()
 	int numSensors = 0;
 	if (NuiGetSensorCount(&numSensors) != S_OK ) 
 	{
-		std::cout << "Kinect Error: Sensor lookup failed, Probably no sensors connected" << std::endl;
-		std::getchar();
+		cgg::loge("Kinect Error: Sensor lookup failed, Probably no sensors connected");
 		return false;
 	}
 
@@ -65,22 +64,19 @@ bool KinectInput::initSensor()
 			// Open a skeleton stream to receive skeleton data
 			if (kinectSensor->NuiSkeletonTrackingEnable(nextSkeletonUpdate, 0) < 0)
 			{
-				std::cout << "Kinect Error: Couldn't open a skeleton stream" << std::endl;
-				std::getchar();
+				cgg::loge("Kinect Error: Couldn't open a skeleton stream");
 				return false;
 			}
 		}
 		else 
 		{
-			std::cout << "Kinect Error: Sensor failed initialization" << std::endl;
-			std::getchar();
+			cgg::loge("Kinect Error: Sensor failed initialization");
 			return false;
 		}
 	}
 	else
 	{
-		std::cout << "Kinect Error: No sensor could be initialized" << std::endl;
-		std::getchar();
+		cgg::loge("Kinect Error: No sensor could be initialized");
 		return false;
 	}
 
@@ -97,8 +93,7 @@ bool KinectInput::startTracking()
 	}
 	else
 	{
-		std::cout << "Kinect Error: Sensor can't start tracking until it is initialized" << std::endl;
-		std::getchar();
+		cgg::loge("Kinect Error: Sensor can't start tracking until it is initialized");
 		return false;
 	}
 }
@@ -155,13 +150,12 @@ void KinectInput::switchHand(TrackingPoint newHand)
 		selectedJoint = NUI_SKELETON_POSITION_HAND_RIGHT;
 		break;
 	default:
-		std::cout << "Kinect Error: Invalid joint selected" << std::endl;
-		std::getchar();
+		cgg::logw("Kinect Warning: Invalid joint selected, old joint preserved");
 		break;
 	}
 }
 
-Vec3 KinectInput::getHandPos()
+cgg::Vec3 KinectInput::getHandPos()
 {
 	return handPos;
 }

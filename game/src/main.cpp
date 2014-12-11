@@ -1,3 +1,4 @@
+// Engine Includes
 #include "main.h"
 #include "cgg/cgg.h"
 #include "gl/Device.h"
@@ -9,10 +10,16 @@
 #include "gl/DepthStencilState.h"
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
-
+// Backend Includes
+#include "Kinect.h"
+// Game Components Includes
 #include "Jack.h"
 #include "Bowl.h"
 #include "Box.h"
+
+// Maybe Include a way to set these (Menu, Command line argument or Hidden Key Combo)
+const TrackingPoint hand = RightHand; // Which hand to track
+const bool sitMode = false; // if the Kinect should look for sitting/standing skeletons (Cannot be changed once initialized)
 
 cgg::MayaCamera g_camera;
 cgg::Mat43 g_model;
@@ -27,7 +34,7 @@ Jack* jack;
 Bowl* red;
 Bowl* blue;
 Box* ground;
-
+KinectInput kinect(sitMode,hand);
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -89,6 +96,9 @@ void init()
 {
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
+	
+	// TODO: Might need a conditional to check here for errors
+	kinect.startTracking();
 }
 
 /// Loads the assets for the game
@@ -200,6 +210,8 @@ void update(float dt)
 		exit(0);
 	}
 	
+	kinect.update();
+
 	//Quick Hack for movement
 	int speed = 4;
 	if (Forwards)

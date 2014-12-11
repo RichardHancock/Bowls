@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <NuiApi.h>
-#include "Vec3.h"
+#include "cgg/cgg.h"
 
 enum TrackingPoint
 {
@@ -18,7 +18,7 @@ private:
 
 	bool sitMode;
 	NUI_SKELETON_POSITION_INDEX selectedJoint;
-	Vec3 handPos;
+	cgg::Vec3 handPos;
 
 	bool initSensor();
 	void processSkeletonData();
@@ -30,5 +30,5 @@ public:
 	void switchHand(TrackingPoint);
 	bool startTracking();
 	void update();
-	Vec3 getHandPos();
+	cgg::Vec3 getHandPos();
 };
