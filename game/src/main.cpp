@@ -99,6 +99,9 @@ void init()
 	
 	// TODO: Might need a conditional to check here for errors
 	kinect.startTracking();
+
+	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
+	g_camera.rotate(cgg::HALF_PI /2, -0.25);
 }
 
 /// Loads the assets for the game
@@ -138,9 +141,9 @@ void loadAssets()
 	blue->render(g_prims);
 
 	// generate a jack
-	m.w.x = 6;
-	m.w.z = 3;
-	m.w.y = -2.5;
+	m.w.x = -20;
+	m.w.z = 0;
+	m.w.y = 0;
 
 	colour.x = 1;
 	colour.y = 1;
@@ -198,6 +201,7 @@ void kill()
 // Dirty Global for movement (REMOVE LATER)
 bool Forwards = true;
 bool Forwards2 = true;
+cgg::Vec3 kinectFakePos = { 0, 0, 0 };
 
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
@@ -211,6 +215,11 @@ void update(float dt)
 	}
 	
 	kinect.update();
+	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
+
+	// Kinect Test (Really Hacky)
+	jack->updatePosition(cgg::Vec3(-20,0,0) + handPos);
+	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
 
 	//Quick Hack for movement
 	int speed = 4;
@@ -332,6 +341,33 @@ void mouseMove(int32_t x, int32_t y)
 
 	g_lastX = x;
 	g_lastY = y;
+}
+
+cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
+{
+	//Temp Overwrite because coding without a Kinect;
+	if (cgg::isKeyPressed('w'))
+	{
+		kinectFakePos.z += 0.01f;
+	}
+	if (cgg::isKeyPressed('s'))
+	{
+		kinectFakePos.z -= 0.01f;
+	}
+	if (cgg::isKeyPressed('a'))
+	{
+		kinectFakePos.y -= 0.01f;
+	}
+	if (cgg::isKeyPressed('d'))
+	{
+		kinectFakePos.y += 0.01f;
+	}
+	cgg::Vec3 flippedKinectFakePos = { 0, 0, 0 };
+	flippedKinectFakePos.x = kinectFakePos.z;
+	flippedKinectFakePos.y = kinectFakePos.x;
+	flippedKinectFakePos.z = kinectFakePos.y;
+
+	return flippedKinectFakePos;
 }
 
 // main is buried inside this macro!

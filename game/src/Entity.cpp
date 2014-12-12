@@ -17,6 +17,13 @@ void Entity::changePosition(cgg::Vec3 adjustBy)
 	transform.w.z += adjustBy.z;
 }
 
+void Entity::updatePosition(cgg::Vec3 changeTo)
+{
+	transform.w.x = changeTo.x;
+	transform.w.y = changeTo.y;
+	transform.w.z = changeTo.z;
+}
+
 cgg::Vec3 Entity::getPosition()
 {
 	cgg::Vec3 pos;
