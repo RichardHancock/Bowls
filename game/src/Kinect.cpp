@@ -100,10 +100,7 @@ bool KinectInput::startTracking()
 
 void KinectInput::update()
 {
-	if (kinectSensor == NULL)
-	{
-		return;
-	}
+	if (kinectSensor == NULL) { return; }
 
 	// Wait for 0ms, just quickly test if it is time to process a skeleton
 	if (WaitForSingleObject(nextSkeletonUpdate, 0) == WAIT_OBJECT_0)
