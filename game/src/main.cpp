@@ -66,20 +66,21 @@ void custom_gl_draw(gl::Device* device)
 	g_camera.computeInverseCameraMatrix(g_view);
 	g_view.makeGL();
 	
-	g_prims = new gl::Primitives;
-	g_prims->initGL(cgg::getGlDevice());
-	g_prims->begin();
-
+	//g_prims = new gl::Primitives;
+	//g_prims->initGL(cgg::getGlDevice());
+	//g_prims->begin();
+	/*
 	jack->render(g_prims);
 	red->render(g_prims);
 	blue->render(g_prims);
 	ground->render(g_prims);
 
 	g_prims->end();
-	;
-
+	*/
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
+	//delete g_prims;
+	//g_prims = 0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +200,7 @@ void update(float dt)
 	{
 		exit(0);
 	}
-	
+	/*
 	//Quick Hack for movement
 	int speed = 4;
 	if (Forwards)
@@ -238,7 +239,7 @@ void update(float dt)
 	{
 		Forwards2 = true;
 	}
-
+	*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
