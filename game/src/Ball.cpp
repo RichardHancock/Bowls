@@ -18,3 +18,8 @@ void Ball::render(gl::Primitives* primitiveList)
 {
 	primitiveList->sphere(transform, colour, radius);
 }
+
+float Ball::getRadius()
+{
+	return radius;
+}

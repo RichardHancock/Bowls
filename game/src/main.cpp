@@ -13,6 +13,7 @@
 #include "Jack.h"
 #include "Bowl.h"
 #include "Box.h"
+#include "Physics.h"
 
 cgg::MayaCamera g_camera;
 cgg::Mat43 g_model;
@@ -200,14 +201,88 @@ void update(float dt)
 		exit(0);
 	}
 	
+	cgg::Vec3 tmp;
+	cgg::Vec3 tmp2;
+	cgg::Vec3 tmp3;
+	cgg::Vec3 tmp4;
+
 	//Quick Hack for movement
 	int speed = 4;
 	if (Forwards)
 	{
+		//hacky collision check test
+		if (Forwards2)
+		{
+			tmp = cgg::Vec3(speed * dt, 0, 0);
+			tmp2 = cgg::Vec3(0, 0, speed * dt);
+			tmp3 = red->getPosition() + tmp;
+			tmp4 = blue->getPosition() + tmp2;
+			if(Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
+				tmp3, tmp4))
+			{
+				cgg::logi("Collision");
+			}
+			else
+			{
+				cgg::logi("no collision");
+			}
+		}
+		else
+		{
+			tmp = cgg::Vec3(speed * dt, 0, 0);
+			tmp2 = cgg::Vec3(0, 0, -speed * dt);
+			tmp3 = red->getPosition() + tmp;
+			tmp4 = blue->getPosition() + tmp2;
+			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(), 
+				tmp3, tmp4))
+			{
+				cgg::logi("Collision");
+			}
+			else
+			{
+				cgg::logi("no collision");
+			}
+		}
+
+
 		red->changePosition(cgg::Vec3(speed * dt, 0, 0));
 	}
 	else
 	{
+		//hacky collision check test
+		if (Forwards2)
+		{
+			tmp = cgg::Vec3(-speed * dt, 0, 0);
+			tmp2 = cgg::Vec3(0, 0, speed * dt);
+			tmp3 = red->getPosition() + tmp;
+			tmp4 = blue->getPosition() + tmp2;
+			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
+				tmp3, tmp4))
+			{
+				cgg::logi("Collision");
+			}
+			else
+			{
+				cgg::logi("no collision");
+			}
+		}
+		else
+		{
+			tmp = cgg::Vec3(-speed * dt, 0, 0);
+			tmp2 = cgg::Vec3(0, 0, -speed * dt);
+			tmp3 = red->getPosition() + tmp;
+			tmp4 = blue->getPosition() + tmp2;
+			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
+				tmp3, tmp4))
+			{
+				cgg::logi("Collision");
+			}
+			else
+			{
+				cgg::logi("no collision");
+			}
+		}
+
 		red->changePosition(cgg::Vec3(-speed * dt, 0, 0));
 	}
 

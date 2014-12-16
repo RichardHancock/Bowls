@@ -1,5 +1,8 @@
 #pragma once
 
+#include <math.h>
+#include "cgg/cgg.h"
+
 /**
 @brief Physics functions
 
@@ -7,30 +10,25 @@ A Namespace that contains functions for the physics in the game.
 */
 namespace Physics
 {
-	bool quadraticFormula(float a, float b, float c, float& x0, float& x1)
+	bool ballHitBallCheck(float ball1Radius, float ball2Radius, cgg::Vec3 ball1Position, cgg::Vec3 ball2Position)
 	{
-		float term = (b*b) - (4.0f*a*c);
-		if (term >= 0)
+		float radSum = ball1Radius + ball2Radius;
+		float deltaX = ball1Position.x - ball2Position.x;
+		float deltaY = ball1Position.y - ball2Position.y;
+		float deltaZ = ball1Position.z - ball2Position.z;
+		// sqrt (dX^2 + dY^2 + dZ^2)
+		float distance = sqrtf((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+		if (distance < radSum)
 		{
-			term = sqrt(term);
-			x0 = (-b - term) / (2.0f*a);
-			x1 = (-b + term) / (2.0f*a);
 			return true;
 		}
-		// no real solutions exist,
-		// the square root is negative!
 		return false;
 	}
 
-	bool ballHitBallCheck(cgg::Vec3 Pa, cgg::Vec3 Da, cgg::Vec3 Ra, cgg::Vec3 Pb, 
-							cgg::Vec3 Db, cgg::Vec3 Rb, float& t0, float& t1)
+	cgg::Vec3 newCollisionVector()
 	{
-		cgg::Vec3 P = Pa - Pb;
-		cgg::Vec3 D = Da - Db;
-		cgg::Vec3 R = Ra + Rb;
-		float a = cgg::dot(D, D);
-		float b = 2 * cgg::dot(D, P);
-		float c = cgg::dot(P, P) - cgg::dot(R, R); //...............Hopefully?
-		return quadraticFormula(a, b, c, t0, t1);
+		cgg::Vec3 newVec;
+
+		return newVec;
 	}
 };
