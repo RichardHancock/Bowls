@@ -213,6 +213,7 @@ namespace GraphicsGL
 				return program;
 			}
 
+
 			// if failed, log error, and delete program and shaders
 			cgt::loge("Shaders failed to link into a program :(");
 			delete program;

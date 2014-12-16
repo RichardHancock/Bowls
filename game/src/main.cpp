@@ -10,9 +10,11 @@
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
 
+#include "Graphics.h"
 #include "Jack.h"
 #include "Bowl.h"
 #include "Box.h"
+#include "Mesh.h"
 
 cgg::MayaCamera g_camera;
 cgg::Mat43 g_model;
@@ -22,6 +24,17 @@ cgg::Mat43 g_mvp;
 gl::Primitives* g_prims = 0;
 gl::DepthStencilState* g_depthStencilState = 0;
 gl::RasterState* g_rasterState = 0;
+gl::Program* program = 0;
+
+gl::Shader* g_shaders[2];
+gl::Program* g_program;
+
+//Uniform Locations
+int32_t g_mvpUniformIndex;
+int32_t g_mvUniformIndex;
+
+
+Mesh* ballMesh;
 
 Jack* jack;
 Bowl* red;
@@ -95,6 +108,14 @@ void init()
 /// Loads the assets for the game
 void loadAssets()
 {
+	g_program = GraphicsGL::makeProgram("", "", g_shaders);
+	g_mvpUniformIndex = g_program->getUniformLocation("vs_mvp");
+	g_mvUniformIndex = g_program->getUniformLocation("vs_mv");
+
+
+	ballMesh = new Mesh("assets/Bowl.meshes");
+
+	/*
 	// allocate new primitives
 	g_prims = new gl::Primitives;
 
@@ -152,7 +173,7 @@ void loadAssets()
 
 	//End the group of primitives
 	g_prims->end();
-	
+	*/
 	
 	//Need to investigate what these do(ATM keep because stuff breaks if not kept)
 	// enable depth testing
