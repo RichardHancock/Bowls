@@ -66,8 +66,6 @@ void custom_gl_draw(gl::Device* device)
 	g_camera.computeInverseCameraMatrix(g_view);
 	g_view.makeGL();
 	
-	g_prims = new gl::Primitives;
-	g_prims->initGL(cgg::getGlDevice());
 	g_prims->begin();
 
 	jack->render(g_prims);
