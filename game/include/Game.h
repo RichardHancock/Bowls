@@ -35,7 +35,7 @@ private:
 	const float bowlRadius = 1;
 	const float jackRadius = 0.5;
 
-	void playerTurn();
+	void playerTurnStart();
 	void throwBowl();
 
 	bool timerExpired();

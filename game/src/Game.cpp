@@ -31,12 +31,10 @@ void Game::update(float dt)
 	}
 }
 
-void Game::playerTurn()
+void Game::playerTurnStart()
 {
 	//Matrix handling & Kinect Pos Handling
 	cgg::Mat43 kinect;
-
-
 
 	//Need to handle Jack special case
 	switch (currentTurn)
@@ -62,7 +60,6 @@ void Game::playerTurn()
 void Game::throwBowl()
 {
 	
-
 }
 
 bool Game::timerExpired()
