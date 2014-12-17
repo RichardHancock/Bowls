@@ -193,7 +193,9 @@ void freeAssets()
 //------------------------------------------------------------------------------------------------------------------------------------
 void kill()
 {
-
+	delete g_prims;
+	g_prims = 0;
+	exit(0);
 }
 
 // Dirty Global for movement (REMOVE LATER)
@@ -215,7 +217,7 @@ void update(float dt)
 	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
 
 	// Kinect Test (Really Hacky)
-	jack->updatePosition(cgg::Vec3(-20,-1,0) + handPos);
+	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
 	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
 
 	//Quick Hack for movement
@@ -348,9 +350,9 @@ cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
 	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
 	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
 	
-	flippedKinectPos.x = pos.z;
+	flippedKinectPos.x = -pos.z;
 	flippedKinectPos.y = pos.y;
-	flippedKinectPos.z = -pos.x;
+	flippedKinectPos.z = pos.x;
 	
 	return flippedKinectPos;
 }
