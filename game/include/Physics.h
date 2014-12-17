@@ -25,10 +25,8 @@ namespace Physics
 		return false;
 	}
 
-	cgg::Vec3 newCollisionVector()
+	cgg::Vec3 newCollisionVector(cgg::Vec3 moveVectorBall1, cgg::Vec3 moveVectorBall2)
 	{
-		cgg::Vec3 newVec;
-
-		return newVec;
+		return (moveVectorBall1 + moveVectorBall2);
 	}
 };

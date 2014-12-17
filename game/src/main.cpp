@@ -67,8 +67,6 @@ void custom_gl_draw(gl::Device* device)
 	g_camera.computeInverseCameraMatrix(g_view);
 	g_view.makeGL();
 	
-	g_prims = new gl::Primitives;
-	g_prims->initGL(cgg::getGlDevice());
 	g_prims->begin();
 
 	jack->render(g_prims);
@@ -77,7 +75,6 @@ void custom_gl_draw(gl::Device* device)
 	ground->render(g_prims);
 
 	g_prims->end();
-	;
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
@@ -118,8 +115,8 @@ void loadAssets()
 	red->render(g_prims);
 
 	// generate a blue sphere
-	m.w.x = 2;
-	m.w.z = 3;
+	m.w.x = 8;
+	m.w.z = 0;
 	m.w.y = -2;
 
 	colour.x = 0;
@@ -200,118 +197,54 @@ void update(float dt)
 	{
 		exit(0);
 	}
+
+	if (cgg::isKeyPressed(cgg::kKeyEnter))
+	{
+		blue->updateXVelocity(-20.0f);
+	}
 	
-	cgg::Vec3 tmp;
-	cgg::Vec3 tmp2;
-	cgg::Vec3 tmp3;
-	cgg::Vec3 tmp4;
-
-	//Quick Hack for movement
-	int speed = 4;
-	if (Forwards)
+	//hacky collision check test
+	if(Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
+		red->getPosition() + cgg::Vec3(
+		red->getXVelocity() * dt,
+		red->getYVelocity() * dt,
+		red->getZVelocity() * dt),
+		blue->getPosition() + cgg::Vec3(
+		blue->getXVelocity() * dt,
+		blue->getYVelocity() * dt,
+		blue->getZVelocity() * dt)))
 	{
-		//hacky collision check test
-		if (Forwards2)
-		{
-			tmp = cgg::Vec3(speed * dt, 0, 0);
-			tmp2 = cgg::Vec3(0, 0, speed * dt);
-			tmp3 = red->getPosition() + tmp;
-			tmp4 = blue->getPosition() + tmp2;
-			if(Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
-				tmp3, tmp4))
-			{
-				cgg::logi("Collision");
-			}
-			else
-			{
-				cgg::logi("no collision");
-			}
-		}
-		else
-		{
-			tmp = cgg::Vec3(speed * dt, 0, 0);
-			tmp2 = cgg::Vec3(0, 0, -speed * dt);
-			tmp3 = red->getPosition() + tmp;
-			tmp4 = blue->getPosition() + tmp2;
-			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(), 
-				tmp3, tmp4))
-			{
-				cgg::logi("Collision");
-			}
-			else
-			{
-				cgg::logi("no collision");
-			}
-		}
-
-
-		red->changePosition(cgg::Vec3(speed * dt, 0, 0));
+		//new velocities
+		//TODO
 	}
 	else
 	{
-		//hacky collision check test
-		if (Forwards2)
-		{
-			tmp = cgg::Vec3(-speed * dt, 0, 0);
-			tmp2 = cgg::Vec3(0, 0, speed * dt);
-			tmp3 = red->getPosition() + tmp;
-			tmp4 = blue->getPosition() + tmp2;
-			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
-				tmp3, tmp4))
-			{
-				cgg::logi("Collision");
-			}
-			else
-			{
-				cgg::logi("no collision");
-			}
-		}
-		else
-		{
-			tmp = cgg::Vec3(-speed * dt, 0, 0);
-			tmp2 = cgg::Vec3(0, 0, -speed * dt);
-			tmp3 = red->getPosition() + tmp;
-			tmp4 = blue->getPosition() + tmp2;
-			if (Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
-				tmp3, tmp4))
-			{
-				cgg::logi("Collision");
-			}
-			else
-			{
-				cgg::logi("no collision");
-			}
-		}
-
-		red->changePosition(cgg::Vec3(-speed * dt, 0, 0));
+		red->changePosition(cgg::Vec3(
+			red->getXVelocity() * dt,
+			red->getYVelocity() * dt,
+			red->getZVelocity() * dt));
+		blue->changePosition(cgg::Vec3(
+			blue->getXVelocity() * dt,
+			blue->getYVelocity() * dt,
+			blue->getZVelocity() * dt));
 	}
 
-	if (red->getPosition().x >= 20.0)
+	//hacky friction
+	if (red->getXVelocity() < 0)
 	{
-		Forwards = false;
+		red->updateXVelocity(red->getXVelocity() + 0.1);
 	}
-	if (red->getPosition().x <= -20.0)
+	if (red->getXVelocity() > 0)
 	{
-		Forwards = true;
+		red->updateXVelocity(red->getXVelocity() - 0.1);
 	}
-
-	//blue
-	if (Forwards2)
+	if (blue->getXVelocity() < 0)
 	{
-		blue->changePosition(cgg::Vec3(0, 0, speed * dt));
+		blue->updateXVelocity(blue->getXVelocity() + 0.1);
 	}
-	else
+	if (blue->getXVelocity() > 0)
 	{
-		blue->changePosition(cgg::Vec3(0, 0, -speed * dt));
-	}
-
-	if (blue->getPosition().z >= 5.0)
-	{
-		Forwards2 = false;
-	}
-	if (blue->getPosition().z <= -5.0)
-	{
-		Forwards2 = true;
+		blue->updateXVelocity(blue->getXVelocity() - 0.1);
 	}
 
 }
