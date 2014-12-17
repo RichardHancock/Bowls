@@ -74,7 +74,6 @@ void custom_gl_draw(gl::Device* device)
 	ground->render(g_prims);
 
 	g_prims->end();
-	;
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
