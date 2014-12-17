@@ -12,3 +12,4 @@ void draw2D();
 void mousePress(int32_t button, int32_t x, int32_t y);
 void mouseRelease(int32_t button, int32_t x, int32_t y);
 void mouseMove(int32_t x, int32_t y);
+cgg::Vec3 kinectPosConversion(cgg::Vec3 pos);
