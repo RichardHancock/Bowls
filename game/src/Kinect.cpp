@@ -117,6 +117,10 @@ void KinectInput::processSkeletonData()
 	// Get the skeleton frame that is ready
 	if (kinectSensor->NuiSkeletonGetNextFrame(0, &skeletonFrame) >= 0)
 	{	
+		///Skeleton Data Smoothing Algorithm parameters
+		const NUI_TRANSFORM_SMOOTH_PARAMETERS smoothParams = { 0.5f, 0.5f, 0.5f, 0.05f, 0.04f };
+		NuiTransformSmooth(&skeletonFrame, &smoothParams);
+
 		// Can replace 1 with NUI_SKELETON_COUNT to track multiple people, currently out of scope for our current game.
 		for (int i = 0; i < 1; i++)
 		{

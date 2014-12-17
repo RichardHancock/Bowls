@@ -73,8 +73,6 @@ void custom_gl_draw(gl::Device* device)
 	g_camera.computeInverseCameraMatrix(g_view);
 	g_view.makeGL();
 	
-	g_prims = new gl::Primitives;
-	g_prims->initGL(cgg::getGlDevice());
 	g_prims->begin();
 
 	jack->render(g_prims);
@@ -83,7 +81,6 @@ void custom_gl_draw(gl::Device* device)
 	ground->render(g_prims);
 
 	g_prims->end();
-	;
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
@@ -196,12 +193,12 @@ void freeAssets()
 //------------------------------------------------------------------------------------------------------------------------------------
 void kill()
 {
+
 }
 
 // Dirty Global for movement (REMOVE LATER)
 bool Forwards = true;
 bool Forwards2 = true;
-cgg::Vec3 kinectFakePos = { 0, 0, 0 };
 
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
@@ -218,7 +215,7 @@ void update(float dt)
 	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
 
 	// Kinect Test (Really Hacky)
-	jack->updatePosition(cgg::Vec3(-20,0,0) + handPos);
+	jack->updatePosition(cgg::Vec3(-20,-1,0) + handPos);
 	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
 
 	//Quick Hack for movement
@@ -345,29 +342,17 @@ void mouseMove(int32_t x, int32_t y)
 
 cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
 {
-	//Temp Overwrite because coding without a Kinect;
-	if (cgg::isKeyPressed('w'))
-	{
-		kinectFakePos.z += 0.01f;
-	}
-	if (cgg::isKeyPressed('s'))
-	{
-		kinectFakePos.z -= 0.01f;
-	}
-	if (cgg::isKeyPressed('a'))
-	{
-		kinectFakePos.y -= 0.01f;
-	}
-	if (cgg::isKeyPressed('d'))
-	{
-		kinectFakePos.y += 0.01f;
-	}
-	cgg::Vec3 flippedKinectFakePos = { 0, 0, 0 };
-	flippedKinectFakePos.x = kinectFakePos.z;
-	flippedKinectFakePos.y = kinectFakePos.x;
-	flippedKinectFakePos.z = kinectFakePos.y;
+	//Scale it up a bit to make movements noticeable
+	pos *= 5;
 
-	return flippedKinectFakePos;
+	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
+	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
+	
+	flippedKinectPos.x = pos.z;
+	flippedKinectPos.y = pos.y;
+	flippedKinectPos.z = -pos.x;
+	
+	return flippedKinectPos;
 }
 
 // main is buried inside this macro!
