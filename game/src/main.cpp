@@ -164,7 +164,7 @@ void loadAssets()
 
 	colour.x = 1;
 	colour.y = 1;
-	colour.z = 0;
+	colour.z = 1;
 	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12));
 	endWall->render(g_prims);
 
@@ -175,7 +175,7 @@ void loadAssets()
 
 	colour.x = 1;
 	colour.y = 1;
-	colour.z = 0;
+	colour.z = 1;
 	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1));
 	sideWall1->render(g_prims);
 
@@ -186,7 +186,7 @@ void loadAssets()
 
 	colour.x = 1;
 	colour.y = 1;
-	colour.z = 0;
+	colour.z = 1;
 	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1));
 	sideWall2->render(g_prims);
 
