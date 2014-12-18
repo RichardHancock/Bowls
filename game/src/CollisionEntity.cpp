@@ -12,20 +12,6 @@ CollisionEntity::CollisionEntity(cgg::Mat43 transform, cgg::Vec3 colour)
 	velocities = { 0.0f, 0.0f, 0.0f };
 }
 
-//Quick Hack for Demo Purposes
-void CollisionEntity::changePosition(cgg::Vec3 adjustBy)
-{
-	transform.w.x += adjustBy.x;
-	transform.w.y += adjustBy.y;
-	transform.w.z += adjustBy.z;
-}
-
-cgg::Vec3 CollisionEntity::getPosition()
-{
-	cgg::Vec3 pos = { transform.w.x, transform.w.y, transform.w.z };
-	return pos;
-}
-
 //velocities
 void CollisionEntity::updateXVelocity(float x)
 {

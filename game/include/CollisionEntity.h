@@ -37,24 +37,6 @@ public:
 	CollisionEntity(cgg::Mat43, cgg::Vec3);
 
 	/**
-	Change the position by this amount
-
-	The inputed Vec3 is +='d to the original transform
-
-	@param cgg::Vec3 - x,y,z to adjust by.
-	*/
-	void changePosition(cgg::Vec3);
-
-	/**
-	Gets the current position
-
-	Gets the current position in a cgg::Vec3
-
-	@returns cgg::Vec3 - Current Position.
-	*/
-	cgg::Vec3 getPosition();
-
-	/**
 	Change the velocity to the inputed value
 
 	The inputed floats are the new values of the x velocity

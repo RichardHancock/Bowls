@@ -35,6 +35,24 @@ public:
 	Entity(cgg::Mat43, cgg::Vec3);
 
 	/**
+	Change the position by this amount
+
+	The inputed Vec3 is +='d to the original transform
+
+	@param cgg::Vec3 - x,y,z to adjust by.
+	*/
+	void changePosition(cgg::Vec3);
+
+	/**
+	Gets the current position
+
+	Gets the current position in a cgg::Vec3
+
+	@returns cgg::Vec3 - Current Position.
+	*/
+	cgg::Vec3 getPosition();
+
+	/**
 	Renders a primitive
 
 	Creates a primitive and passes it into primitiveList.
