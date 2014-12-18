@@ -137,7 +137,22 @@ void KinectInput::calculateHandPos(NUI_SKELETON_DATA skeleton)
 		handPos.x = skeleton.SkeletonPositions[selectedJoint].x;
 		handPos.y = skeleton.SkeletonPositions[selectedJoint].y;
 		handPos.z = skeleton.SkeletonPositions[selectedJoint].z;
+		kinectPosConversion();
 	}
+}
+
+void KinectInput::kinectPosConversion()
+{
+	//Scale it up a bit to make movements noticeable
+	handPos *= 5;
+
+	cgg::Vec3 flippedKinectPos = handPos;
+
+	flippedKinectPos.x = -handPos.z;
+	flippedKinectPos.y = handPos.y;
+	flippedKinectPos.z = handPos.x;
+
+	handPos = flippedKinectPos;
 }
 
 void KinectInput::switchHand(TrackingPoint newHand)

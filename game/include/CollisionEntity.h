@@ -22,7 +22,7 @@ public:
 
 	PURE VIRTUAL Don't create this object
 
-	@param cgg::Mat43 The transformation matrix
+	@param cgg::Mat43 - The transformation matrix
 	*/
 	CollisionEntity(cgg::Mat43);
 
@@ -35,6 +35,25 @@ public:
 	@param cgg::Vec3 - Contains the colour r,g,b values
 	*/
 	CollisionEntity(cgg::Mat43, cgg::Vec3);
+
+	/**
+	PURE VIRTUAL Creates an Entity with Collision
+
+	PURE VIRTUAL Don't create this object
+
+	@param cgg::Vec3 - Position
+	*/
+	CollisionEntity(cgg::Vec3);
+
+	/**
+	PURE VIRTUAL Creates an Entity with Collision
+
+	PURE VIRTUAL Don't create this object
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	*/
+	CollisionEntity(cgg::Vec3, cgg::Vec3);
 private:
 
 };

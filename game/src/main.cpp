@@ -342,20 +342,5 @@ void mouseMove(int32_t x, int32_t y)
 	g_lastY = y;
 }
 
-cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
-{
-	//Scale it up a bit to make movements noticeable
-	pos *= 5;
-
-	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
-	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
-	
-	flippedKinectPos.x = -pos.z;
-	flippedKinectPos.y = pos.y;
-	flippedKinectPos.z = pos.x;
-	
-	return flippedKinectPos;
-}
-
 // main is buried inside this macro!
 CGG_APPLICATION("Bowls");

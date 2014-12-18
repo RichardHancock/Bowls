@@ -1,9 +1,11 @@
 #include "Game.h"
 
-Game::Game()
+Game::Game(bool sitMode, TrackingPoint hand)
 {
 	timerCurrentTime = 0;
 	timerMaxTime = -1;
+	srand(time(NULL));
+	kinectSensor = new KinectInput(sitMode, hand);
 }
 
 Game::~Game()
@@ -29,6 +31,26 @@ void Game::update(float dt)
 		//increment currentTime
 		timerCurrentTime += (1 * dt);
 	}
+
+	kinectSensor->update();
+}
+
+void Game::startGame()
+{
+	int coinFlip = randomNumber(0, 1);
+	if (coinFlip)
+	{
+		currentTurn = BluePlayer;
+		cgg::logi("Blue Player wins the coin toss, they go first");
+	}
+	else
+	{
+		currentTurn = RedPlayer;
+		cgg::logi("Red Player wins the coin toss, they go first");
+	}
+
+	hand = new Jack(handPos, jackColour, jackRadius);
+	
 }
 
 void Game::playerTurnStart()

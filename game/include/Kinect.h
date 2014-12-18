@@ -49,6 +49,12 @@ private:
 	@param NUI_SKELETON_DATA - The skeleton data
 	*/
 	void calculateHandPos(NUI_SKELETON_DATA);
+
+	/**
+	@brief Converts the hand position to usable numbers
+	*/
+	void kinectPosConversion();
+
 public:
 	/**
 	@brief Creates the Kinect Input Manager

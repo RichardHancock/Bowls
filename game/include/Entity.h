@@ -20,7 +20,7 @@ public:
 
 	PURE VIRTUAL Don't create this object
 
-	@param cgg::Mat43 The transformation matrix
+	@param cgg::Mat43 - The transformation matrix
 	*/
 	Entity(cgg::Mat43);
 
@@ -33,6 +33,25 @@ public:
 	@param cgg::Vec3 - Contains the colour r,g,b values
 	*/
 	Entity(cgg::Mat43, cgg::Vec3);
+	
+	/**
+	PURE VIRTUAL Creates an Entity
+
+	PURE VIRTUAL Don't create this object
+
+	@param cgg::Vec3 - Position
+	*/
+	Entity(cgg::Vec3);
+
+	/**
+	PURE VIRTUAL Creates an Entity
+
+	PURE VIRTUAL Don't create this object
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	*/
+	Entity(cgg::Vec3, cgg::Vec3);
 
 	/**
 	Renders a primitive

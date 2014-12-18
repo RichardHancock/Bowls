@@ -49,6 +49,40 @@ public:
 	Box(cgg::Mat43, cgg::Vec3, float, float, float);
 
 	/**
+	BROKEN - Create a Box object
+
+	BROKEN - Creates a Box object using the passed in transform.
+
+	@todo Find a way to copy the transform into the dimension Vec3 otherwise this crashes.
+	@param cgg::Vec3 - Position
+	*/
+	Box(cgg::Vec3);
+
+	/**
+	Create a Box object
+
+	Creates a Box object using the passed in transform, colour and dimensions.
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	@param cgg::Vec3 - Dimensions contains the width, height and depth (In that order)
+	*/
+	Box(cgg::Vec3, cgg::Vec3, cgg::Vec3);
+
+	/**
+	Create a Box object
+
+	Creates a Box object using the passed in transform, colour and individual dimensions.
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	@param float - Width of the Box
+	@param float - Height of the Box
+	@param float - Depth of the Box
+	*/
+	Box(cgg::Vec3, cgg::Vec3, float, float, float);
+
+	/**
 	Renders a box
 
 	Creates a box using the objects internal values and passes it into primitiveList.
