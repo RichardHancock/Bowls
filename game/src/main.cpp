@@ -28,6 +28,9 @@ Jack* jack;
 Bowl* red;
 Bowl* blue;
 Box* ground;
+Box* endWall;
+Box* sideWall1;
+Box* sideWall2;
 
 float angle = 0.0f;
 
@@ -76,6 +79,9 @@ void custom_gl_draw(gl::Device* device)
 	red->render(g_prims);
 	blue->render(g_prims);
 	ground->render(g_prims);
+	endWall->render(g_prims);
+	sideWall1->render(g_prims);
+	sideWall2->render(g_prims);
 
 	g_prims->end();
 
@@ -140,7 +146,7 @@ void loadAssets()
 	jack = new Jack(m, colour, 0.5);
 	
 
-	// generate a box
+	// generate ground
 	m.w.x = 0;
 	m.w.z = 0;
 	m.w.y = -4;
@@ -150,6 +156,39 @@ void loadAssets()
 	colour.z = 0;
 	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
 	ground->render(g_prims);
+
+	// generate endWall
+	m.w.x = 20.5f;
+	m.w.z = 0;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 0;
+	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12));
+	endWall->render(g_prims);
+
+	// generate sideWall1
+	m.w.x = 0;
+	m.w.z = -5.5f;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 0;
+	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall1->render(g_prims);
+
+	// generate sideWall2
+	m.w.x = 0;
+	m.w.z = 5.5f;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 0;
+	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall2->render(g_prims);
 
 	//End the group of primitives
 	g_prims->end();
