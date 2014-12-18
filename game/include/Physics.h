@@ -3,6 +3,7 @@
 #include <math.h>
 #include "cgg/cgg.h"
 #include "Bowl.h"
+#include "Box.h"
 
 /**
 @brief Physics functions
@@ -11,15 +12,36 @@ A Namespace that contains functions for the physics in the game.
 */
 namespace Physics
 {
-	bool ballHitBallCheck(float ball1Radius, float ball2Radius, cgg::Vec3 ball1Position, cgg::Vec3 ball2Position)
+	bool collisionCheck(Bowl* ball1, Bowl* ball2, float dt)
 	{
-		float radSum = ball1Radius + ball2Radius;
-		float deltaX = ball1Position.x - ball2Position.x;
-		float deltaY = ball1Position.y - ball2Position.y;
-		float deltaZ = ball1Position.z - ball2Position.z;
+		float radSum = ball1->getRadius() + ball2->getRadius();
+		cgg::Vec3 ball1Pos = ball1->getPosition();
+		cgg::Vec3 ball2Pos = ball2->getPosition();
+		float deltaX = (ball1Pos.x + (ball1->getXVelocity() * dt)) - (ball2Pos.x + (ball2->getXVelocity() * dt));
+		float deltaY = (ball1Pos.y + (ball1->getYVelocity() * dt)) - (ball2Pos.y + (ball2->getYVelocity() * dt));
+		float deltaZ = (ball1Pos.z + (ball1->getZVelocity() * dt)) - (ball2Pos.z + (ball2->getZVelocity() * dt));
 		// sqrt (dX^2 + dY^2 + dZ^2)
 		float distance = sqrtf((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
 		if (distance < radSum)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	bool collisionCheck(Bowl* ball, Box* wall, float dt)
+	{		
+		float rad = ball->getRadius();
+		float width = (wall->getWidth()*0.5);
+		float depth = (wall->getDepth()*0.5);
+		cgg::Vec3 ballPos = ball->getPosition();
+		ballPos.x += (ball->getXVelocity() * dt);
+		ballPos.z += (ball->getZVelocity() * dt);
+		cgg::Vec3 wallPos = wall->getPosition();
+		if (ballPos.x + rad < wallPos.x + width && ballPos.x + rad > wallPos.x - width
+			&& ballPos.z + rad < wallPos.z + depth && ballPos.z + rad > wallPos.z - depth
+			|| ballPos.x - rad < wallPos.x + width && ballPos.x - rad > wallPos.x - width
+			&& ballPos.z - rad < wallPos.z + depth && ballPos.z - rad > wallPos.z - depth)
 		{
 			return true;
 		}
@@ -50,13 +72,19 @@ namespace Physics
 			ball1->updateZVelocity((ball1->getZVelocity()*0.5f));
 		}
 
-		float tmpRedX = ball1->getXVelocity();
-		float tmpRedZ = ball1->getZVelocity();
+		float tmpBall1X = ball1->getXVelocity();
+		float tmpBall1Z = ball1->getZVelocity();
 
 		ball1->updateXVelocity((ball2->getXVelocity()*0.5f));
 		ball1->updateZVelocity((ball2->getZVelocity()*0.5f));
-		ball2->updateXVelocity((tmpRedX*0.5f));
-		ball2->updateZVelocity((tmpRedZ*0.5f));
+		ball2->updateXVelocity((tmpBall1X*0.5f));
+		ball2->updateZVelocity((tmpBall1Z*0.5f));
+	}
+
+	void newCollisionVelocities(Bowl* ball)
+	{
+		ball->updateXVelocity(-(ball->getXVelocity()));
+		ball->updateZVelocity(-(ball->getZVelocity()));
 	}
 
 	void applyFriction(Bowl* ball)

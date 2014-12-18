@@ -240,7 +240,7 @@ void update(float dt)
 	{
 		exit(0);
 	}
-
+	//test Keys
 	if (cgg::isKeyPressed(cgg::kKeyEnter))
 	{
 		blue->updateXVelocity(-20.0f);
@@ -259,14 +259,36 @@ void update(float dt)
 	{
 		angle = angle - 0.1;
 	}
+	if (cgg::isKeyPressed(cgg::kKeyUp))
+	{
+		blue->updateZVelocity(20.0f);
+	}
+	if (cgg::isKeyPressed(cgg::kKeyDown))
+	{
+		blue->updateZVelocity(-20.0f);
+	}
 	
-	//collision check test
-	if(Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
-		red->getPosition() + cgg::Vec3(red->getXVelocity() * dt, 0,	red->getZVelocity() * dt),
-		blue->getPosition() + cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt)))
+	//ball ball collision check test
+	if (Physics::collisionCheck(red, blue, dt))
 	{
 		//new velocities
 		Physics::newCollisionVelocities(red, blue);
+	}
+	//wall wall collision tests
+	if (Physics::collisionCheck(blue, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
+	}
+	if (Physics::collisionCheck(blue, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
+	}
+	if (Physics::collisionCheck(blue, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
 	}
 
 	//move balls

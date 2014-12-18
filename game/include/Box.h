@@ -57,6 +57,10 @@ public:
 	*/
 	void render(gl::Primitives*);
 
+	float getWidth();
+	float getDepth();
+	float getHeight();
+
 protected:
 	
 	/// Contains the Width, Height and Depth of the Box
