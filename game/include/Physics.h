@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include "cgg/cgg.h"
+#include "Bowl.h"
 
 /**
 @brief Physics functions
@@ -25,8 +26,67 @@ namespace Physics
 		return false;
 	}
 
-	cgg::Vec3 newCollisionVector(cgg::Vec3 moveVectorBall1, cgg::Vec3 moveVectorBall2)
+	void newCollisionVelocities(Bowl* ball1, Bowl* ball2)
 	{
-		return (moveVectorBall1 + moveVectorBall2);
+		if (ball1->getXVelocity() == 0)
+		{
+			ball1->updateXVelocity((ball2->getXVelocity()));
+			ball2->updateXVelocity((ball2->getXVelocity()*0.5f));
+		}
+		if (ball1->getZVelocity() == 0)
+		{
+			ball1->updateZVelocity((ball2->getZVelocity()));
+			ball2->updateZVelocity((ball2->getZVelocity()*0.5f));
+		}
+
+		if (ball2->getXVelocity() == 0)
+		{
+			ball2->updateXVelocity((ball1->getXVelocity()));
+			ball1->updateXVelocity((ball1->getXVelocity()*0.5f));
+		}
+		if (ball2->getZVelocity() == 0)
+		{
+			ball2->updateZVelocity((ball1->getZVelocity()));
+			ball1->updateZVelocity((ball1->getZVelocity()*0.5f));
+		}
+
+		float tmpRedX = ball1->getXVelocity();
+		float tmpRedZ = ball1->getZVelocity();
+
+		ball1->updateXVelocity((ball2->getXVelocity()*0.5f));
+		ball1->updateZVelocity((ball2->getZVelocity()*0.5f));
+		ball2->updateXVelocity((tmpRedX*0.5f));
+		ball2->updateZVelocity((tmpRedZ*0.5f));
+	}
+
+	void applyFriction(Bowl* ball)
+	{
+		// x friction
+		if (ball->getXVelocity() < 0)
+		{
+			ball->updateXVelocity(ball->getXVelocity() + 0.1);
+		}
+		if (ball->getXVelocity() > 0)
+		{
+			ball->updateXVelocity(ball->getXVelocity() - 0.1);
+		}
+		if (ball->getXVelocity() < 0.1 && ball->getXVelocity() > -0.1)
+		{
+			ball->updateXVelocity(0.0f);
+		}
+
+		// z friction
+		if (ball->getZVelocity() < 0)
+		{
+			ball->updateZVelocity(ball->getZVelocity() + 0.1);
+		}
+		if (ball->getZVelocity() > 0)
+		{
+			ball->updateZVelocity(ball->getZVelocity() - 0.1);
+		}
+		if (ball->getZVelocity() < 0.1 && ball->getZVelocity() > -0.1)
+		{
+			ball->updateZVelocity(0.0f);
+		}
 	}
 };

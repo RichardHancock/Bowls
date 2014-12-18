@@ -29,6 +29,8 @@ Bowl* red;
 Bowl* blue;
 Box* ground;
 
+float angle = 0.0f;
+
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -37,6 +39,7 @@ Box* ground;
 //------------------------------------------------------------------------------------------------------------------------------------
 void custom_gl_draw(gl::Device* device)
 {
+
 	// set viewport
 	gl::Viewport viewport;
 	viewport.left = 0;
@@ -78,6 +81,7 @@ void custom_gl_draw(gl::Device* device)
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -201,51 +205,38 @@ void update(float dt)
 	if (cgg::isKeyPressed(cgg::kKeyEnter))
 	{
 		blue->updateXVelocity(-20.0f);
+		blue->updateZVelocity(angle);
+	}
+	if (cgg::isKeyPressed(cgg::kKeyDelete))
+	{
+		blue->updateXVelocity(20.0f);
+		blue->updateZVelocity(angle);
+	}
+	if (cgg::isKeyPressed(cgg::kKeyLeft))
+	{
+		angle = angle + 0.1;
+	}
+	if (cgg::isKeyPressed(cgg::kKeyRight))
+	{
+		angle = angle - 0.1;
 	}
 	
-	//hacky collision check test
+	//collision check test
 	if(Physics::ballHitBallCheck(red->getRadius(), blue->getRadius(),
-		red->getPosition() + cgg::Vec3(
-		red->getXVelocity() * dt,
-		red->getYVelocity() * dt,
-		red->getZVelocity() * dt),
-		blue->getPosition() + cgg::Vec3(
-		blue->getXVelocity() * dt,
-		blue->getYVelocity() * dt,
-		blue->getZVelocity() * dt)))
+		red->getPosition() + cgg::Vec3(red->getXVelocity() * dt, 0,	red->getZVelocity() * dt),
+		blue->getPosition() + cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt)))
 	{
 		//new velocities
-		//TODO
-	}
-	else
-	{
-		red->changePosition(cgg::Vec3(
-			red->getXVelocity() * dt,
-			red->getYVelocity() * dt,
-			red->getZVelocity() * dt));
-		blue->changePosition(cgg::Vec3(
-			blue->getXVelocity() * dt,
-			blue->getYVelocity() * dt,
-			blue->getZVelocity() * dt));
+		Physics::newCollisionVelocities(red, blue);
 	}
 
-	//hacky friction
-	if (red->getXVelocity() < 0)
-	{
-		red->updateXVelocity(red->getXVelocity() + 0.1);
-	}
-	if (red->getXVelocity() > 0)
-	{
-		red->updateXVelocity(red->getXVelocity() - 0.1);
-	}
-	if (blue->getXVelocity() < 0)
-	{
-		blue->updateXVelocity(blue->getXVelocity() + 0.1);
-	}
-	if (blue->getXVelocity() > 0)
-	{
-		blue->updateXVelocity(blue->getXVelocity() - 0.1);
-	}
+	//move balls
+	red->changePosition(cgg::Vec3(red->getXVelocity() * dt,	0, red->getZVelocity() * dt));
+	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
+
+	//friction
+	Physics::applyFriction(red);
+	Physics::applyFriction(blue);
 
 }
 

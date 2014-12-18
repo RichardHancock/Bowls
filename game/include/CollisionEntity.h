@@ -35,8 +35,81 @@ public:
 	@param cgg::Vec3 - Contains the colour r,g,b values
 	*/
 	CollisionEntity(cgg::Mat43, cgg::Vec3);
-private:
 
+	/**
+	Change the position by this amount
+
+	The inputed Vec3 is +='d to the original transform
+
+	@param cgg::Vec3 - x,y,z to adjust by.
+	*/
+	void changePosition(cgg::Vec3);
+
+	/**
+	Gets the current position
+
+	Gets the current position in a cgg::Vec3
+
+	@returns cgg::Vec3 - Current Position.
+	*/
+	cgg::Vec3 getPosition();
+
+	/**
+	Change the velocity to the inputed value
+
+	The inputed floats are the new values of the x velocity
+
+	@param float x velocity.
+	*/
+	void updateXVelocity(float);
+
+	/**
+	Change the velocity to the inputed value
+
+	The inputed floats are the new values of the y velocity
+
+	@param float y velocity.
+	*/
+	void updateYVelocity(float);
+
+	/**
+	Change the velocity to the inputed value
+
+	The inputed floats are the new values of the z velocity
+
+	@param float z velocity.
+	*/
+	void updateZVelocity(float);
+
+	/**
+	Gets the velocity
+
+	Gets the x velocity
+
+	@returns float x velocity.
+	*/
+	float getXVelocity();
+
+	/**
+	Gets the velocity
+
+	Gets the y velocity
+
+	@returns float y velocity.
+	*/
+	float getYVelocity();
+
+	/**
+	Gets the velocity
+
+	Gets the z velocity
+
+	@returns float z velocity.
+	*/
+	float getZVelocity();
+private:
+	/// cgg::Vec3 containing the velocities of the Entity.
+	cgg::Vec3 velocities;
 };
 
 #endif
