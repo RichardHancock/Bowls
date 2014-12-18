@@ -1,3 +1,4 @@
+// Engine Includes
 #include "main.h"
 #include "cgg/cgg.h"
 #include "gl/Device.h"
@@ -9,11 +10,17 @@
 #include "gl/DepthStencilState.h"
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
-
+// Backend Includes
+#include "Kinect.h"
+// Game Components Includes
 #include "Jack.h"
 #include "Bowl.h"
 #include "Box.h"
 #include "Physics.h"
+
+// Maybe Include a way to set these (Menu, Command line argument or Hidden Key Combo)
+const TrackingPoint hand = RightHand; // Which hand to track
+const bool sitMode = false; // if the Kinect should look for sitting/standing skeletons (Cannot be changed once initialized)
 
 cgg::MayaCamera g_camera;
 cgg::Mat43 g_model;
@@ -32,6 +39,9 @@ Box* endWall;
 Box* sideWall1;
 Box* sideWall2;
 
+KinectInput kinect(sitMode,hand);
+
+//Random Global needs deleting or refactoring
 float angle = 0.0f;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -42,7 +52,6 @@ float angle = 0.0f;
 //------------------------------------------------------------------------------------------------------------------------------------
 void custom_gl_draw(gl::Device* device)
 {
-
 	// set viewport
 	gl::Viewport viewport;
 	viewport.left = 0;
@@ -87,7 +96,6 @@ void custom_gl_draw(gl::Device* device)
 
 	// render primitives
 	g_prims->render(device, g_view, g_projection);
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -97,6 +105,12 @@ void init()
 {
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
+	
+	// TODO: Might need a conditional to check here for errors
+	kinect.startTracking();
+
+	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
+	g_camera.rotate(cgg::HALF_PI /2, -0.25);
 }
 
 /// Loads the assets for the game
@@ -136,9 +150,9 @@ void loadAssets()
 	blue->render(g_prims);
 
 	// generate a jack
-	m.w.x = 6;
-	m.w.z = 3;
-	m.w.y = -2.5;
+	m.w.x = -20;
+	m.w.z = 0;
+	m.w.y = 0;
 
 	colour.x = 1;
 	colour.y = 1;
@@ -224,11 +238,10 @@ void freeAssets()
 //------------------------------------------------------------------------------------------------------------------------------------
 void kill()
 {
+	delete g_prims;
+	g_prims = 0;
+	exit(0);
 }
-
-// Dirty Global for movement (REMOVE LATER)
-bool Forwards = true;
-bool Forwards2 = true;
 
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
@@ -240,9 +253,16 @@ void update(float dt)
 	{
 		exit(0);
 	}
+	
+	kinect.update();
+	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
+
+	// Kinect Test (Really Hacky)
+	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
+	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
+
 	//test Keys
-	if (cgg::isKeyPressed(cgg::kKeyEnter))
-	{
+	if (cgg::isKeyPressed(cgg::kKeyEnter))	{
 		blue->updateXVelocity(-20.0f);
 		blue->updateZVelocity(angle);
 	}
@@ -380,6 +400,21 @@ void mouseMove(int32_t x, int32_t y)
 
 	g_lastX = x;
 	g_lastY = y;
+}
+
+cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
+{
+	//Scale it up a bit to make movements noticeable
+	pos *= 5;
+
+	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
+	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
+	
+	flippedKinectPos.x = -pos.z;
+	flippedKinectPos.y = pos.y;
+	flippedKinectPos.z = pos.x;
+	
+	return flippedKinectPos;
 }
 
 // main is buried inside this macro!

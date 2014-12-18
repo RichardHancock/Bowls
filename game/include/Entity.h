@@ -44,6 +44,15 @@ public:
 	void changePosition(cgg::Vec3);
 
 	/**
+	Update the position to this amount
+
+	The inputed Vec3 replaces the original transform
+
+	@param cgg::Vec3 - x,y,z to transform by.
+	*/
+	void updatePosition(cgg::Vec3);
+
+	/**
 	Gets the current position
 
 	Gets the current position in a cgg::Vec3
