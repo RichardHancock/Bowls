@@ -24,3 +24,18 @@ void Box::render(gl::Primitives* primitiveList)
 {
 	primitiveList->box(transform,colour,dimensions.x,dimensions.y,dimensions.z);
 }
+
+float Box::getWidth()
+{
+	return dimensions.getX();
+}
+
+float Box::getDepth()
+{
+	return dimensions.getZ();
+}
+
+float Box::getHeight()
+{
+	return dimensions.getY();
+}

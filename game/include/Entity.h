@@ -35,18 +35,9 @@ public:
 	Entity(cgg::Mat43, cgg::Vec3);
 
 	/**
-	Renders a primitive
-
-	Creates a primitive and passes it into primitiveList.
-
-	@param gl::Primitives* - Pointer to a list of primitives
-	*/
-	virtual void render(gl::Primitives*) = 0;
-
-	/** 
 	Change the position by this amount
 
-	The inputed Vec3 is +='d to the original transform 
+	The inputed Vec3 is +='d to the original transform
 
 	@param cgg::Vec3 - x,y,z to adjust by.
 	*/
@@ -66,9 +57,19 @@ public:
 
 	Gets the current position in a cgg::Vec3
 
-	@returns cgg::Vec3 - Current Position. 
+	@returns cgg::Vec3 - Current Position.
 	*/
 	cgg::Vec3 getPosition();
+
+	/**
+	Renders a primitive
+
+	Creates a primitive and passes it into primitiveList.
+
+	@param gl::Primitives* - Pointer to a list of primitives
+	*/
+	virtual void render(gl::Primitives*) = 0;
+
 protected:
 	
 	/// cgg::Mat43 containing a transform (position,rotation,scale).
@@ -76,6 +77,7 @@ protected:
 
 	/// cgg::Vec3 containing a colour's r,g,b values.
 	cgg::Vec3 colour;
+
 };
 
 #endif

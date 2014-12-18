@@ -44,6 +44,8 @@ public:
 	*/
 	void render(gl::Primitives*);
 
+	float getRadius();
+
 protected:
 
 	/// Contains the radius of the sphere

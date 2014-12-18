@@ -16,6 +16,7 @@
 #include "Jack.h"
 #include "Bowl.h"
 #include "Box.h"
+#include "Physics.h"
 
 // Maybe Include a way to set these (Menu, Command line argument or Hidden Key Combo)
 const TrackingPoint hand = RightHand; // Which hand to track
@@ -34,7 +35,15 @@ Jack* jack;
 Bowl* red;
 Bowl* blue;
 Box* ground;
+Box* endWall;
+Box* sideWall1;
+Box* sideWall2;
+
 KinectInput kinect(sitMode,hand);
+
+//Random Global needs deleting or refactoring
+float angle = 0.0f;
+
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -79,6 +88,9 @@ void custom_gl_draw(gl::Device* device)
 	red->render(g_prims);
 	blue->render(g_prims);
 	ground->render(g_prims);
+	endWall->render(g_prims);
+	sideWall1->render(g_prims);
+	sideWall2->render(g_prims);
 
 	g_prims->end();
 
@@ -127,8 +139,8 @@ void loadAssets()
 	red->render(g_prims);
 
 	// generate a blue sphere
-	m.w.x = 2;
-	m.w.z = 3;
+	m.w.x = 8;
+	m.w.z = 0;
 	m.w.y = -2;
 
 	colour.x = 0;
@@ -148,7 +160,7 @@ void loadAssets()
 	jack = new Jack(m, colour, 0.5);
 	
 
-	// generate a box
+	// generate ground
 	m.w.x = 0;
 	m.w.z = 0;
 	m.w.y = -4;
@@ -158,6 +170,39 @@ void loadAssets()
 	colour.z = 0;
 	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
 	ground->render(g_prims);
+
+	// generate endWall
+	m.w.x = 20.5f;
+	m.w.z = 0;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 1;
+	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12));
+	endWall->render(g_prims);
+
+	// generate sideWall1
+	m.w.x = 0;
+	m.w.z = -5.5f;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 1;
+	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall1->render(g_prims);
+
+	// generate sideWall2
+	m.w.x = 0;
+	m.w.z = 5.5f;
+	m.w.y = -3;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 1;
+	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall2->render(g_prims);
 
 	//End the group of primitives
 	g_prims->end();
@@ -198,10 +243,6 @@ void kill()
 	exit(0);
 }
 
-// Dirty Global for movement (REMOVE LATER)
-bool Forwards = true;
-bool Forwards2 = true;
-
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
 /// the game was updated. Use 'dt' when animating things in your game.
@@ -220,44 +261,63 @@ void update(float dt)
 	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
 	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
 
-	//Quick Hack for movement
-	int speed = 4;
-	if (Forwards)
-	{
-		red->changePosition(cgg::Vec3(speed * dt, 0, 0));
+	//test Keys
+	if (cgg::isKeyPressed(cgg::kKeyEnter))	{
+		blue->updateXVelocity(-20.0f);
+		blue->updateZVelocity(angle);
 	}
-	else
+	if (cgg::isKeyPressed(cgg::kKeyDelete))
 	{
-		red->changePosition(cgg::Vec3(-speed * dt, 0, 0));
+		blue->updateXVelocity(20.0f);
+		blue->updateZVelocity(angle);
+	}
+	if (cgg::isKeyPressed(cgg::kKeyLeft))
+	{
+		angle = angle + 0.1;
+	}
+	if (cgg::isKeyPressed(cgg::kKeyRight))
+	{
+		angle = angle - 0.1;
+	}
+	if (cgg::isKeyPressed(cgg::kKeyUp))
+	{
+		blue->updateZVelocity(20.0f);
+	}
+	if (cgg::isKeyPressed(cgg::kKeyDown))
+	{
+		blue->updateZVelocity(-20.0f);
+	}
+	
+	//ball ball collision check test
+	if (Physics::collisionCheck(red, blue, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, blue);
+	}
+	//wall wall collision tests
+	if (Physics::collisionCheck(blue, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
+	}
+	if (Physics::collisionCheck(blue, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
+	}
+	if (Physics::collisionCheck(blue, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue);
 	}
 
-	if (red->getPosition().x >= 20.0)
-	{
-		Forwards = false;
-	}
-	if (red->getPosition().x <= -20.0)
-	{
-		Forwards = true;
-	}
+	//move balls
+	red->changePosition(cgg::Vec3(red->getXVelocity() * dt,	0, red->getZVelocity() * dt));
+	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
 
-	//blue
-	if (Forwards2)
-	{
-		blue->changePosition(cgg::Vec3(0, 0, speed * dt));
-	}
-	else
-	{
-		blue->changePosition(cgg::Vec3(0, 0, -speed * dt));
-	}
-
-	if (blue->getPosition().z >= 5.0)
-	{
-		Forwards2 = false;
-	}
-	if (blue->getPosition().z <= -5.0)
-	{
-		Forwards2 = true;
-	}
+	//friction
+	Physics::applyFriction(red);
+	Physics::applyFriction(blue);
 
 }
 
