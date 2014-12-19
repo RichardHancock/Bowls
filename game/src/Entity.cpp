@@ -2,11 +2,11 @@
 
 Entity::Entity(cgg::Mat43 transform) : transform(transform)
 {
-
+	
 }
 Entity::Entity(cgg::Mat43 transform, cgg::Vec3 colour) : transform(transform), colour(colour)
 {
-
+	
 }
 
 Entity::Entity(cgg::Vec3 pos)
@@ -36,9 +36,6 @@ void Entity::updatePosition(cgg::Vec3 changeTo)
 
 cgg::Vec3 Entity::getPosition()
 {
-	cgg::Vec3 pos;
-	pos.x = transform.w.x;
-	pos.y = transform.w.y;
-	pos.z = transform.w.z;
+	cgg::Vec3 pos = { transform.w.x, transform.w.y, transform.w.z };
 	return pos;
 }

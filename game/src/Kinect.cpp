@@ -87,8 +87,23 @@ bool KinectInput::startTracking()
 {
 	if (kinectSensor != NULL)
 	{
+		HRESULT hr;
 		// Start tracking, also set whether the user is seated or standing.
-		kinectSensor->NuiSkeletonTrackingEnable(nextSkeletonUpdate, sitMode ? NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT : 0);
+		hr = kinectSensor->NuiSkeletonTrackingEnable(nextSkeletonUpdate, sitMode ? NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT : 0);
+		switch (hr)
+		{
+		case ERROR_INVALID_OPERATION:
+			cgg::loge("ERROR_INVALID_OPERATION");
+			break;
+		case E_INVALIDARG:
+			cgg::loge("E_INVALIDARG");
+			break;
+		case E_OUTOFMEMORY:
+			cgg::loge("E_OUTOFMEMORY");
+			break;
+		default:
+			break;
+		}
 		return true;
 	}
 	else
@@ -122,10 +137,14 @@ void KinectInput::processSkeletonData()
 		NuiTransformSmooth(&skeletonFrame, &smoothParams);
 
 		// Can replace 1 with NUI_SKELETON_COUNT to track multiple people, currently out of scope for our current game.
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < NUI_SKELETON_COUNT; i++)
 		{
-			NUI_SKELETON_DATA &skeleton = skeletonFrame.SkeletonData[i];
-			calculateHandPos(skeleton);
+			NUI_SKELETON_TRACKING_STATE trackingState =  skeletonFrame.SkeletonData[i].eTrackingState;
+			if (trackingState == NUI_SKELETON_TRACKED)
+			{
+				NUI_SKELETON_DATA &skeleton = skeletonFrame.SkeletonData[i];
+				calculateHandPos(skeleton);
+			}
 		}
 	}
 }
