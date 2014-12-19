@@ -12,6 +12,7 @@
 #include "maths/MayaCamera.h"
 // Backend Includes
 #include "Kinect.h"
+#include "Timer.h"
 // Game Components Includes
 #include "Jack.h"
 #include "Bowl.h"
@@ -44,14 +45,9 @@ Box* sideWall2;
 KinectInput kinect(sitMode,hand);
 
 //Random Global needs deleting or refactoring
-float lastTime = 0.0f;
-float testTime = 0.0f;
-float maxTime = 5.0f;
-int stage = 0;
-float lockedZ = 0.0f;
-float throwStartTime = 0.0f;
-float lockedX = 0.0f;
-bool throwTest = false;
+int stage = 0; //the current cue stage
+float lockedZ = 0.0f; // the z position to be used with input maths
+float lockedX = 0.0f; /// the x position to be used with input maths
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -252,6 +248,9 @@ void loadAssets()
 	raster_desc.init();
 	raster_desc.cullMode = gl::kCullBack;
 	g_rasterState = cgg::getGlDevice()->createRasterState(raster_desc);
+
+	// setup inital cue timer
+	Timer::createTimer(11, 10.0f);
 	
 }
 
@@ -281,25 +280,20 @@ void kill()
 //------------------------------------------------------------------------------------------------------------------------------------
 void update(float dt)
 {
-	lastTime += dt;
-
-	if (throwTest)
-	{
-		testTime += dt;
-	}
+	Timer::update(dt);
 
 	kinect.update();
 	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
 
-	switch (stage)
+	switch (stage)//moves the kinect on screen differently depending on the stage
 	{
 	case 0:
-		// Kinect Test (Really Hacky)
+		// Kinect Input - moves in z axis
 		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, -1.5f, handPos.z));
 		break;
 	case 1:
 	case 2:
-		// Kinect Test (Really Hacky)
+		// Kinect Input - moves in x axis
 		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, -1.5, lockedZ));
 		break;
 	}
@@ -313,16 +307,15 @@ void update(float dt)
 		exit(0);
 	}
 
-	if (lastTime > maxTime && stage < 4)
+	if (Timer::hasTimerFinished(11) && stage < 4) //if it is time for the next stage and the stage is less than 4
 	{
-		lastTime = 0.0f;
-		stage++;
+		stage++;//next stage
 		maths::Mat43 m = maths::Mat43::kIdentity;
 		maths::Vec3 colour;
-		switch (stage)
+		switch (stage)//set up the next stage
 		{
 		case 1:
-			// turn cues yellow
+			// turn cues yellow and redeclares the cues
 			m.w.x = -19.5f;
 			m.w.z = -5.5f;
 			m.w.y = -0.5f;
@@ -338,12 +331,12 @@ void update(float dt)
 			cue2 = new Box(m, colour, 1, false);
 			cue2->render(g_prims);
 
-			lockedZ = handPos.z;
+			lockedZ = handPos.z; //sets the current hand z to the locked z
 
-			maxTime = 5.0f;
+			Timer::createTimer(11, 5.0f); //starts the 5 second timer for this stage
 			break;
 		case 2:
-			// turn cues green
+			// turn cues green and redeclares the cues
 			m.w.x = -19.5f;
 			m.w.z = -5.5f;
 			m.w.y = -0.5f;
@@ -359,40 +352,41 @@ void update(float dt)
 			cue2 = new Box(m, colour, 1, false);
 			cue2->render(g_prims);
 
-			lockedX = handPos.x;
-			throwTest = true;
+			lockedX = handPos.x;// sets the current hand x to the locked x
+			Timer::createTimer(19, 10.0f); //sets ups the timer for the kinect input maths
+			Timer::createTimer(11, 10.0f); //sets up the backup timer so that it auto throws after 10 seconds
 
-			maxTime = 10.0f;
 			break; 
 		case 3:
+			Timer::createTimer(11, 10.0f); //auto throw the ball
 			jack->updateXVelocity(10.0f);
 		}
 	}
-	if (stage == 2 && handPos.x > lockedX + 3.0f)
+	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enougth to be a throw
 	{
-		throwTest = false;
-		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow())
+		float testTime = Timer::stopTimer(19); //get the time it took to throw
+		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow()) //check if the new velocity is greater than the max throw
 		{
-			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f);
+			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f); // if not times it by 10 and use it as the throw
 		}
 		else
 		{
-			jack->updateXVelocity(jack->getThrow()*10.0f);
+			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
 		}
-		if (handPos.z < 2)
+		if (handPos.z < 2) //check if the new z pos is on the left of the screen
 		{
-			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
-			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f); //update the z velocity using the pos z - the locked z so velocity is -ve
+			//cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
 		}
-		else
+		else //if on the right side of the screen
 		{
-			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f);
-			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f).c_str());
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f); //update the z velocity using the pos z + the locked z so velocity is +ve
+			//cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f).c_str());
 		}
-		stage = 5;
+		stage = 5; //set the stage to 5 so it wont bother setting a new stage
 	}
 		
-	//ball ball collision check test
+	//ball ball collision check tests
 	if (Physics::collisionCheck(red, blue, dt))
 	{
 		//new velocities
