@@ -34,6 +34,8 @@ gl::RasterState* g_rasterState = 0;
 Jack* jack;
 Bowl* red;
 Bowl* blue;
+Box* cue;
+Box* cue2;
 Box* ground;
 Box* endWall;
 Box* sideWall1;
@@ -42,7 +44,15 @@ Box* sideWall2;
 KinectInput kinect(sitMode,hand);
 
 //Random Global needs deleting or refactoring
-float angle = 0.0f;
+float lastTime = 0.0f;
+float testTime = 0.0f;
+float maxTime = 10.0f;
+int stage = 0;
+float lockedZ = 0.0f;
+float throwStartTime = 0.0f;
+float lockedX = 0.0f;
+bool throwTest = false;
+float distanceTest = 3.0f;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -84,6 +94,8 @@ void custom_gl_draw(gl::Device* device)
 	
 	g_prims->begin();
 
+	cue->render(g_prims);
+	cue2->render(g_prims);
 	jack->render(g_prims);
 	red->render(g_prims);
 	blue->render(g_prims);
@@ -159,6 +171,27 @@ void loadAssets()
 	colour.z = 0;
 	jack = new Jack(m, colour, 0.5);
 	
+	// generate a cue
+	m.w.x = -19.5f;
+	m.w.z = -5.5f;
+	m.w.y = -0.5f;
+
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 0;
+	cue = new Box(m, colour, 1);
+	cue->render(g_prims);
+
+	// generate a cue
+	m.w.x = -19.5f;
+	m.w.z = 5.5f;
+	m.w.y = -0.5f;
+
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 0;
+	cue2 = new Box(m, colour, 1);
+	cue2->render(g_prims);
 
 	// generate ground
 	m.w.x = 0;
@@ -249,43 +282,111 @@ void kill()
 //------------------------------------------------------------------------------------------------------------------------------------
 void update(float dt)
 {
+	lastTime += dt;
+
+	if (throwTest)
+	{
+		testTime += dt;
+	}
+
+	kinect.update();
+	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
+
+	switch (stage)
+	{
+	case 0:
+		// Kinect Test (Really Hacky)
+		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, -1.5f, handPos.z));
+		break;
+	case 1:
+	case 2:
+		// Kinect Test (Really Hacky)
+		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, -1.5, lockedZ));
+		break;
+	}
+
+	//jack->updatePosition(cgg::Vec3(-17, -1, 0) + handPos);
+
+	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
+
 	if (cgg::isKeyPressed(cgg::kKeyEscape))
 	{
 		exit(0);
 	}
+
+	if (lastTime > maxTime && stage < 4)
+	{
+		lastTime = 0.0f;
+		stage++;
+		maths::Mat43 m = maths::Mat43::kIdentity;
+		maths::Vec3 colour;
+		switch (stage)
+		{
+		case 1:
+			// turn cues yellow
+			m.w.x = -19.5f;
+			m.w.z = -5.5f;
+			m.w.y = -0.5f;
+
+			colour.x = 1;
+			colour.y = 1;
+			colour.z = 0;
+			cue = new Box(m, colour, 1);
+			cue->render(g_prims);
+
+			m.w.z = 5.5f;
+
+			cue2 = new Box(m, colour, 1);
+			cue2->render(g_prims);
+
+			lockedZ = handPos.z;
+
+			maxTime = 5.0f;
+			break;
+		case 2:
+			// turn cues green
+			m.w.x = -19.5f;
+			m.w.z = -5.5f;
+			m.w.y = -0.5f;
+
+			colour.x = 0;
+			colour.y = 1;
+			colour.z = 0;
+			cue = new Box(m, colour, 1);
+			cue->render(g_prims);
+
+			m.w.z = 5.5f;
+
+			cue2 = new Box(m, colour, 1);
+			cue2->render(g_prims);
+
+			lockedX = handPos.x;
+			throwTest = true;
+
+			maxTime = 10.0f;
+			break; 
+		case 3:
+			jack->updateXVelocity(10.0f);
+		}
+	}
+
+	if (stage == 2)
+	{
+		cgg::logi(std::to_string(handPos.x).c_str());
+	}
 	
-	kinect.update();
-	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
-
-	// Kinect Test (Really Hacky)
-	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
-	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
-
-	//test Keys
-	if (cgg::isKeyPressed(cgg::kKeyEnter))	{
-		blue->updateXVelocity(-20.0f);
-		blue->updateZVelocity(angle);
-	}
-	if (cgg::isKeyPressed(cgg::kKeyDelete))
+	if (stage == 2 && handPos.x > lockedX + distanceTest)
 	{
-		blue->updateXVelocity(20.0f);
-		blue->updateZVelocity(angle);
-	}
-	if (cgg::isKeyPressed(cgg::kKeyLeft))
-	{
-		angle = angle + 0.1;
-	}
-	if (cgg::isKeyPressed(cgg::kKeyRight))
-	{
-		angle = angle - 0.1;
-	}
-	if (cgg::isKeyPressed(cgg::kKeyUp))
-	{
-		blue->updateZVelocity(20.0f);
-	}
-	if (cgg::isKeyPressed(cgg::kKeyDown))
-	{
-		blue->updateZVelocity(-20.0f);
+		throwTest = false;
+		if ((Physics::kinectInputVelocity(distanceTest, testTime)) < 2.5)
+		{
+			jack->updateXVelocity((Physics::kinectInputVelocity(distanceTest, testTime))*10.0f);
+		}
+		else
+		{
+			jack->updateXVelocity(25.0f);
+		}
+		stage = 5;
 	}
 	
 	//ball ball collision check test
@@ -294,30 +395,42 @@ void update(float dt)
 		//new velocities
 		Physics::newCollisionVelocities(red, blue);
 	}
+	/*if (Physics::collisionCheck(red, jack, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, jack);
+	}*/
+	if (Physics::collisionCheck(red, blue, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, blue);
+	}
 	//wall wall collision tests
-	if (Physics::collisionCheck(blue, endWall, dt))
+	if (Physics::collisionCheck(jack, endWall, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(jack);
 	}
-	if (Physics::collisionCheck(blue, sideWall1, dt))
+	if (Physics::collisionCheck(jack, sideWall1, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(jack);
 	}
-	if (Physics::collisionCheck(blue, sideWall2, dt))
+	if (Physics::collisionCheck(jack, sideWall2, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(jack);
 	}
 
 	//move balls
 	red->changePosition(cgg::Vec3(red->getXVelocity() * dt,	0, red->getZVelocity() * dt));
 	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
+	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
 
 	//friction
 	Physics::applyFriction(red);
 	Physics::applyFriction(blue);
+	Physics::applyFriction(jack);
 
 }
 

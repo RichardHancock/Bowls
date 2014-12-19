@@ -12,7 +12,7 @@ A Namespace that contains functions for the physics in the game.
 */
 namespace Physics
 {
-	bool collisionCheck(Bowl* ball1, Bowl* ball2, float dt)
+	bool collisionCheck(Ball* ball1, Ball* ball2, float dt)
 	{
 		float radSum = ball1->getRadius() + ball2->getRadius();
 		cgg::Vec3 ball1Pos = ball1->getPosition();
@@ -29,7 +29,7 @@ namespace Physics
 		return false;
 	}
 
-	bool collisionCheck(Bowl* ball, Box* wall, float dt)
+	bool collisionCheck(Ball* ball, Box* wall, float dt)
 	{		
 		float rad = ball->getRadius();
 		float width = (wall->getWidth()*0.5);
@@ -48,7 +48,7 @@ namespace Physics
 		return false;
 	}
 
-	void newCollisionVelocities(Bowl* ball1, Bowl* ball2)
+	void newCollisionVelocities(Ball* ball1, Ball* ball2)
 	{
 		if (ball1->getXVelocity() == 0)
 		{
@@ -81,13 +81,13 @@ namespace Physics
 		ball2->updateZVelocity((tmpBall1Z*0.5f));
 	}
 
-	void newCollisionVelocities(Bowl* ball)
+	void newCollisionVelocities(Ball* ball)
 	{
 		ball->updateXVelocity(-(ball->getXVelocity()));
 		ball->updateZVelocity(-(ball->getZVelocity()));
 	}
 
-	void applyFriction(Bowl* ball)
+	void applyFriction(Ball* ball)
 	{
 		// x friction
 		if (ball->getXVelocity() < 0)
@@ -116,5 +116,11 @@ namespace Physics
 		{
 			ball->updateZVelocity(0.0f);
 		}
+	}
+
+	float kinectInputVelocity(float distance, float time)
+	{
+		float velocity = distance / time;
+		return velocity;
 	}
 };
