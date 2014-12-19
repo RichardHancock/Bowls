@@ -34,6 +34,8 @@ gl::RasterState* g_rasterState = 0;
 Jack* jack;
 Bowl* red;
 Bowl* blue;
+Box* cue;
+Box* cue2;
 Box* ground;
 Box* endWall;
 Box* sideWall1;
@@ -42,7 +44,14 @@ Box* sideWall2;
 KinectInput kinect(sitMode,hand);
 
 //Random Global needs deleting or refactoring
-float angle = 0.0f;
+float lastTime = 0.0f;
+float testTime = 0.0f;
+float maxTime = 5.0f;
+int stage = 0;
+float lockedZ = 0.0f;
+float throwStartTime = 0.0f;
+float lockedX = 0.0f;
+bool throwTest = false;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -84,6 +93,8 @@ void custom_gl_draw(gl::Device* device)
 	
 	g_prims->begin();
 
+	cue->render(g_prims);
+	cue2->render(g_prims);
 	jack->render(g_prims);
 	red->render(g_prims);
 	blue->render(g_prims);
@@ -159,6 +170,27 @@ void loadAssets()
 	colour.z = 0;
 	jack = new Jack(m, colour, 0.5);
 	
+	// generate a cue
+	m.w.x = -19.5f;
+	m.w.z = -5.5f;
+	m.w.y = -0.5f;
+
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 0;
+	cue = new Box(m, colour, 1, false);
+	cue->render(g_prims);
+
+	// generate a cue
+	m.w.x = -19.5f;
+	m.w.z = 5.5f;
+	m.w.y = -0.5f;
+
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 0;
+	cue2 = new Box(m, colour, 1, false);
+	cue2->render(g_prims);
 
 	// generate ground
 	m.w.x = 0;
@@ -168,7 +200,7 @@ void loadAssets()
 	colour.x = 0;
 	colour.y = 1;
 	colour.z = 0;
-	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
+	ground = new Box(m, colour, cgg::Vec3(40, 2, 10), false);
 	ground->render(g_prims);
 
 	// generate endWall
@@ -179,7 +211,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12));
+	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12), true);
 	endWall->render(g_prims);
 
 	// generate sideWall1
@@ -190,7 +222,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
 	sideWall1->render(g_prims);
 
 	// generate sideWall2
@@ -201,7 +233,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
 	sideWall2->render(g_prims);
 
 	//End the group of primitives
@@ -249,75 +281,194 @@ void kill()
 //------------------------------------------------------------------------------------------------------------------------------------
 void update(float dt)
 {
+	lastTime += dt;
+
+	if (throwTest)
+	{
+		testTime += dt;
+	}
+
+	kinect.update();
+	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
+
+	switch (stage)
+	{
+	case 0:
+		// Kinect Test (Really Hacky)
+		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, -1.5f, handPos.z));
+		break;
+	case 1:
+	case 2:
+		// Kinect Test (Really Hacky)
+		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, -1.5, lockedZ));
+		break;
+	}
+
+	//jack->updatePosition(cgg::Vec3(-17, -1, 0) + handPos);
+
+	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
+
 	if (cgg::isKeyPressed(cgg::kKeyEscape))
 	{
 		exit(0);
 	}
-	
-	kinect.update();
-	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
 
-	// Kinect Test (Really Hacky)
-	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
-	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
+	if (lastTime > maxTime && stage < 4)
+	{
+		lastTime = 0.0f;
+		stage++;
+		maths::Mat43 m = maths::Mat43::kIdentity;
+		maths::Vec3 colour;
+		switch (stage)
+		{
+		case 1:
+			// turn cues yellow
+			m.w.x = -19.5f;
+			m.w.z = -5.5f;
+			m.w.y = -0.5f;
 
-	//test Keys
-	if (cgg::isKeyPressed(cgg::kKeyEnter))	{
-		blue->updateXVelocity(-20.0f);
-		blue->updateZVelocity(angle);
+			colour.x = 1;
+			colour.y = 1;
+			colour.z = 0;
+			cue = new Box(m, colour, 1, false);
+			cue->render(g_prims);
+
+			m.w.z = 5.5f;
+
+			cue2 = new Box(m, colour, 1, false);
+			cue2->render(g_prims);
+
+			lockedZ = handPos.z;
+
+			maxTime = 5.0f;
+			break;
+		case 2:
+			// turn cues green
+			m.w.x = -19.5f;
+			m.w.z = -5.5f;
+			m.w.y = -0.5f;
+
+			colour.x = 0;
+			colour.y = 1;
+			colour.z = 0;
+			cue = new Box(m, colour, 1, false);
+			cue->render(g_prims);
+
+			m.w.z = 5.5f;
+
+			cue2 = new Box(m, colour, 1, false);
+			cue2->render(g_prims);
+
+			lockedX = handPos.x;
+			throwTest = true;
+
+			maxTime = 10.0f;
+			break; 
+		case 3:
+			jack->updateXVelocity(10.0f);
+		}
 	}
-	if (cgg::isKeyPressed(cgg::kKeyDelete))
+	if (stage == 2 && handPos.x > lockedX + 3.0f)
 	{
-		blue->updateXVelocity(20.0f);
-		blue->updateZVelocity(angle);
+		throwTest = false;
+		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow())
+		{
+			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f);
+		}
+		else
+		{
+			jack->updateXVelocity(jack->getThrow()*10.0f);
+		}
+		if (handPos.z < 2)
+		{
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
+			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
+		}
+		else
+		{
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f);
+			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f).c_str());
+		}
+		stage = 5;
 	}
-	if (cgg::isKeyPressed(cgg::kKeyLeft))
-	{
-		angle = angle + 0.1;
-	}
-	if (cgg::isKeyPressed(cgg::kKeyRight))
-	{
-		angle = angle - 0.1;
-	}
-	if (cgg::isKeyPressed(cgg::kKeyUp))
-	{
-		blue->updateZVelocity(20.0f);
-	}
-	if (cgg::isKeyPressed(cgg::kKeyDown))
-	{
-		blue->updateZVelocity(-20.0f);
-	}
-	
+		
 	//ball ball collision check test
 	if (Physics::collisionCheck(red, blue, dt))
 	{
 		//new velocities
 		Physics::newCollisionVelocities(red, blue);
 	}
+	if (Physics::collisionCheck(red, jack, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, jack);
+	}
+	if (Physics::collisionCheck(blue, jack, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue, jack);
+	}
+	if (Physics::collisionCheck(red, blue, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, blue);
+	}
 	//wall wall collision tests
+	if (Physics::collisionCheck(jack, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(jack, endWall);
+	}
+	if (Physics::collisionCheck(jack, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(jack, sideWall1);
+	}
+	if (Physics::collisionCheck(jack, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(jack, sideWall2);
+	}
 	if (Physics::collisionCheck(blue, endWall, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(blue, endWall);
 	}
 	if (Physics::collisionCheck(blue, sideWall1, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(blue, sideWall1);
 	}
 	if (Physics::collisionCheck(blue, sideWall2, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(blue);
+		Physics::newCollisionVelocities(blue, sideWall2);
+	}
+	if (Physics::collisionCheck(blue, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, endWall);
+	}
+	if (Physics::collisionCheck(red, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, sideWall1);
+	}
+	if (Physics::collisionCheck(red, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, sideWall2);
 	}
 
 	//move balls
 	red->changePosition(cgg::Vec3(red->getXVelocity() * dt,	0, red->getZVelocity() * dt));
 	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
+	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
 
 	//friction
 	Physics::applyFriction(red);
 	Physics::applyFriction(blue);
+	Physics::applyFriction(jack);
 
 }
 

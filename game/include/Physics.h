@@ -12,7 +12,7 @@ A Namespace that contains functions for the physics in the game.
 */
 namespace Physics
 {
-	bool collisionCheck(Bowl* ball1, Bowl* ball2, float dt)
+	bool collisionCheck(Ball* ball1, Ball* ball2, float dt)
 	{
 		float radSum = ball1->getRadius() + ball2->getRadius();
 		cgg::Vec3 ball1Pos = ball1->getPosition();
@@ -29,7 +29,7 @@ namespace Physics
 		return false;
 	}
 
-	bool collisionCheck(Bowl* ball, Box* wall, float dt)
+	bool collisionCheck(Ball* ball, Box* wall, float dt)
 	{		
 		float rad = ball->getRadius();
 		float width = (wall->getWidth()*0.5);
@@ -48,46 +48,52 @@ namespace Physics
 		return false;
 	}
 
-	void newCollisionVelocities(Bowl* ball1, Bowl* ball2)
+	void newCollisionVelocities(Ball* ball1, Ball* ball2)
 	{
 		if (ball1->getXVelocity() == 0)
 		{
 			ball1->updateXVelocity((ball2->getXVelocity()));
-			ball2->updateXVelocity((ball2->getXVelocity()*0.5f));
+			ball2->updateXVelocity((ball2->getXVelocity()*0.75f));
 		}
 		if (ball1->getZVelocity() == 0)
 		{
 			ball1->updateZVelocity((ball2->getZVelocity()));
-			ball2->updateZVelocity((ball2->getZVelocity()*0.5f));
+			ball2->updateZVelocity((ball2->getZVelocity()*0.75f));
 		}
 
 		if (ball2->getXVelocity() == 0)
 		{
 			ball2->updateXVelocity((ball1->getXVelocity()));
-			ball1->updateXVelocity((ball1->getXVelocity()*0.5f));
+			ball1->updateXVelocity((ball1->getXVelocity()*0.75f));
 		}
 		if (ball2->getZVelocity() == 0)
 		{
 			ball2->updateZVelocity((ball1->getZVelocity()));
-			ball1->updateZVelocity((ball1->getZVelocity()*0.5f));
+			ball1->updateZVelocity((ball1->getZVelocity()*0.75f));
 		}
 
 		float tmpBall1X = ball1->getXVelocity();
 		float tmpBall1Z = ball1->getZVelocity();
 
-		ball1->updateXVelocity((ball2->getXVelocity()*0.5f));
-		ball1->updateZVelocity((ball2->getZVelocity()*0.5f));
-		ball2->updateXVelocity((tmpBall1X*0.5f));
-		ball2->updateZVelocity((tmpBall1Z*0.5f));
+		ball1->updateXVelocity((ball2->getXVelocity()*0.75f));
+		ball1->updateZVelocity((ball2->getZVelocity()*0.75f));
+		ball2->updateXVelocity((tmpBall1X*0.75f));
+		ball2->updateZVelocity((tmpBall1Z*0.75f));
 	}
 
-	void newCollisionVelocities(Bowl* ball)
+	void newCollisionVelocities(Ball* ball, Box* wall)
 	{
-		ball->updateXVelocity(-(ball->getXVelocity()));
-		ball->updateZVelocity(-(ball->getZVelocity()));
+		if (!wall->xAxisCheck())
+		{
+			ball->updateZVelocity(-(ball->getZVelocity()));
+		}
+		else
+		{
+			ball->updateXVelocity(-(ball->getXVelocity()));
+		}
 	}
 
-	void applyFriction(Bowl* ball)
+	void applyFriction(Ball* ball)
 	{
 		// x friction
 		if (ball->getXVelocity() < 0)
@@ -116,5 +122,11 @@ namespace Physics
 		{
 			ball->updateZVelocity(0.0f);
 		}
+	}
+
+	float kinectInputVelocity(float distance, float time)
+	{
+		float velocity = distance / time;
+		return velocity;
 	}
 };
