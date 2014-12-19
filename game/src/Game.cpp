@@ -49,7 +49,7 @@ void Game::startGame()
 		cgg::logi("Red Player wins the coin toss, they go first");
 	}
 
-	hand = new Jack(handPos, jackColour, jackRadius);
+	//hand = new Jack(handPos, jackColour, jackRadius);
 	
 }
 
@@ -58,19 +58,20 @@ void Game::playerTurnStart()
 	//Matrix handling & Kinect Pos Handling
 	cgg::Mat43 kinect;
 
+	Bowl* bowl;
 	//Need to handle Jack special case
 	switch (currentTurn)
 	{
 	case RedPlayer:
-		Bowl* redBowl = new Bowl(kinect, redColour, bowlRadius);
+		bowl = new Bowl(kinect, redColour, bowlRadius);
 
-		redBowls.push_back(redBowl);
+		redBowls.push_back(bowl);
 		break;
 
 	case BluePlayer:
-		Bowl* blueBowl = new Bowl(kinect, blueColour, bowlRadius);
+		bowl = new Bowl(kinect, blueColour, bowlRadius);
 		
-		blueBowls.push_back(blueBowl);
+		blueBowls.push_back(bowl);
 		break;
 
 	default:

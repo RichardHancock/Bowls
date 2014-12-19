@@ -16,7 +16,7 @@ Jack::Jack(cgg::Mat43 transform, cgg::Vec3 colour, float radius)
 }
 
 Jack::Jack(cgg::Vec3 pos) 
-	: Ball()
+	: Ball(pos)
 {
 	radius = 0.5;
 	colour.x = 1;

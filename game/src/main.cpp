@@ -289,7 +289,7 @@ void update(float dt)
 	}
 
 	kinect.update();
-	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
+	cgg::Vec3 handPos = kinect.getHandPos();
 
 	switch (stage)
 	{
