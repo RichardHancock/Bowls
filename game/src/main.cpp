@@ -46,13 +46,12 @@ KinectInput kinect(sitMode,hand);
 //Random Global needs deleting or refactoring
 float lastTime = 0.0f;
 float testTime = 0.0f;
-float maxTime = 10.0f;
+float maxTime = 5.0f;
 int stage = 0;
 float lockedZ = 0.0f;
 float throwStartTime = 0.0f;
 float lockedX = 0.0f;
 bool throwTest = false;
-float distanceTest = 3.0f;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -179,7 +178,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 0;
 	colour.z = 0;
-	cue = new Box(m, colour, 1);
+	cue = new Box(m, colour, 1, false);
 	cue->render(g_prims);
 
 	// generate a cue
@@ -190,7 +189,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 0;
 	colour.z = 0;
-	cue2 = new Box(m, colour, 1);
+	cue2 = new Box(m, colour, 1, false);
 	cue2->render(g_prims);
 
 	// generate ground
@@ -201,7 +200,7 @@ void loadAssets()
 	colour.x = 0;
 	colour.y = 1;
 	colour.z = 0;
-	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
+	ground = new Box(m, colour, cgg::Vec3(40, 2, 10), false);
 	ground->render(g_prims);
 
 	// generate endWall
@@ -212,7 +211,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12));
+	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12), true);
 	endWall->render(g_prims);
 
 	// generate sideWall1
@@ -223,7 +222,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
 	sideWall1->render(g_prims);
 
 	// generate sideWall2
@@ -234,7 +233,7 @@ void loadAssets()
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 1;
-	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1));
+	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
 	sideWall2->render(g_prims);
 
 	//End the group of primitives
@@ -331,12 +330,12 @@ void update(float dt)
 			colour.x = 1;
 			colour.y = 1;
 			colour.z = 0;
-			cue = new Box(m, colour, 1);
+			cue = new Box(m, colour, 1, false);
 			cue->render(g_prims);
 
 			m.w.z = 5.5f;
 
-			cue2 = new Box(m, colour, 1);
+			cue2 = new Box(m, colour, 1, false);
 			cue2->render(g_prims);
 
 			lockedZ = handPos.z;
@@ -352,12 +351,12 @@ void update(float dt)
 			colour.x = 0;
 			colour.y = 1;
 			colour.z = 0;
-			cue = new Box(m, colour, 1);
+			cue = new Box(m, colour, 1, false);
 			cue->render(g_prims);
 
 			m.w.z = 5.5f;
 
-			cue2 = new Box(m, colour, 1);
+			cue2 = new Box(m, colour, 1, false);
 			cue2->render(g_prims);
 
 			lockedX = handPos.x;
@@ -369,37 +368,46 @@ void update(float dt)
 			jack->updateXVelocity(10.0f);
 		}
 	}
-
-	if (stage == 2)
-	{
-		cgg::logi(std::to_string(handPos.x).c_str());
-	}
-	
-	if (stage == 2 && handPos.x > lockedX + distanceTest)
+	if (stage == 2 && handPos.x > lockedX + 3.0f)
 	{
 		throwTest = false;
-		if ((Physics::kinectInputVelocity(distanceTest, testTime)) < 2.5)
+		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow())
 		{
-			jack->updateXVelocity((Physics::kinectInputVelocity(distanceTest, testTime))*10.0f);
+			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f);
 		}
 		else
 		{
-			jack->updateXVelocity(25.0f);
+			jack->updateXVelocity(jack->getThrow()*10.0f);
+		}
+		if (handPos.z < 2)
+		{
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
+			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
+		}
+		else
+		{
+			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f);
+			cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f).c_str());
 		}
 		stage = 5;
 	}
-	
+		
 	//ball ball collision check test
 	if (Physics::collisionCheck(red, blue, dt))
 	{
 		//new velocities
 		Physics::newCollisionVelocities(red, blue);
 	}
-	/*if (Physics::collisionCheck(red, jack, dt))
+	if (Physics::collisionCheck(red, jack, dt))
 	{
 		//new velocities
 		Physics::newCollisionVelocities(red, jack);
-	}*/
+	}
+	if (Physics::collisionCheck(blue, jack, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue, jack);
+	}
 	if (Physics::collisionCheck(red, blue, dt))
 	{
 		//new velocities
@@ -409,17 +417,47 @@ void update(float dt)
 	if (Physics::collisionCheck(jack, endWall, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(jack);
+		Physics::newCollisionVelocities(jack, endWall);
 	}
 	if (Physics::collisionCheck(jack, sideWall1, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(jack);
+		Physics::newCollisionVelocities(jack, sideWall1);
 	}
 	if (Physics::collisionCheck(jack, sideWall2, dt))
 	{
 		//new velocities
-		Physics::newCollisionVelocities(jack);
+		Physics::newCollisionVelocities(jack, sideWall2);
+	}
+	if (Physics::collisionCheck(blue, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue, endWall);
+	}
+	if (Physics::collisionCheck(blue, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue, sideWall1);
+	}
+	if (Physics::collisionCheck(blue, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(blue, sideWall2);
+	}
+	if (Physics::collisionCheck(blue, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, endWall);
+	}
+	if (Physics::collisionCheck(red, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, sideWall1);
+	}
+	if (Physics::collisionCheck(red, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(red, sideWall2);
 	}
 
 	//move balls

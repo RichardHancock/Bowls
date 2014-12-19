@@ -53,38 +53,44 @@ namespace Physics
 		if (ball1->getXVelocity() == 0)
 		{
 			ball1->updateXVelocity((ball2->getXVelocity()));
-			ball2->updateXVelocity((ball2->getXVelocity()*0.5f));
+			ball2->updateXVelocity((ball2->getXVelocity()*0.75f));
 		}
 		if (ball1->getZVelocity() == 0)
 		{
 			ball1->updateZVelocity((ball2->getZVelocity()));
-			ball2->updateZVelocity((ball2->getZVelocity()*0.5f));
+			ball2->updateZVelocity((ball2->getZVelocity()*0.75f));
 		}
 
 		if (ball2->getXVelocity() == 0)
 		{
 			ball2->updateXVelocity((ball1->getXVelocity()));
-			ball1->updateXVelocity((ball1->getXVelocity()*0.5f));
+			ball1->updateXVelocity((ball1->getXVelocity()*0.75f));
 		}
 		if (ball2->getZVelocity() == 0)
 		{
 			ball2->updateZVelocity((ball1->getZVelocity()));
-			ball1->updateZVelocity((ball1->getZVelocity()*0.5f));
+			ball1->updateZVelocity((ball1->getZVelocity()*0.75f));
 		}
 
 		float tmpBall1X = ball1->getXVelocity();
 		float tmpBall1Z = ball1->getZVelocity();
 
-		ball1->updateXVelocity((ball2->getXVelocity()*0.5f));
-		ball1->updateZVelocity((ball2->getZVelocity()*0.5f));
-		ball2->updateXVelocity((tmpBall1X*0.5f));
-		ball2->updateZVelocity((tmpBall1Z*0.5f));
+		ball1->updateXVelocity((ball2->getXVelocity()*0.75f));
+		ball1->updateZVelocity((ball2->getZVelocity()*0.75f));
+		ball2->updateXVelocity((tmpBall1X*0.75f));
+		ball2->updateZVelocity((tmpBall1Z*0.75f));
 	}
 
-	void newCollisionVelocities(Ball* ball)
+	void newCollisionVelocities(Ball* ball, Box* wall)
 	{
-		ball->updateXVelocity(-(ball->getXVelocity()));
-		ball->updateZVelocity(-(ball->getZVelocity()));
+		if (!wall->xAxisCheck())
+		{
+			ball->updateZVelocity(-(ball->getZVelocity()));
+		}
+		else
+		{
+			ball->updateXVelocity(-(ball->getXVelocity()));
+		}
 	}
 
 	void applyFriction(Ball* ball)

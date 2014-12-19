@@ -46,10 +46,14 @@ public:
 
 	float getRadius();
 
+	float getThrow();
+
 protected:
 
 	/// Contains the radius of the sphere
 	float radius;
+
+	float maxThrowStrength;
 };
 
 #endif
