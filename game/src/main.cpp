@@ -110,6 +110,7 @@ void custom_gl_draw(gl::Device* device)
 //------------------------------------------------------------------------------------------------------------------------------------
 void init()
 {
+	cgg::fullScreen(true);
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
 	
@@ -373,7 +374,7 @@ void update(float dt)
 		{
 			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
 		}
-		if (handPos.z < 2) //check if the new z pos is on the left of the screen
+		if (handPos.z < lockedZ) //check if the new z pos is on the left of the locked z position
 		{
 			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f); //update the z velocity using the pos z - the locked z so velocity is -ve
 			//cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
