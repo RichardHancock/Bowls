@@ -39,3 +39,8 @@ cgg::Vec3 Entity::getPosition()
 	cgg::Vec3 pos = { transform.w.x, transform.w.y, transform.w.z };
 	return pos;
 }
+
+void Entity::updateColour(cgg::Vec3 changeTo)
+{
+	colour = changeTo;
+}

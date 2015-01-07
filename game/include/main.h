@@ -7,6 +7,7 @@ void loadAssets();
 void freeAssets();
 void kill();
 void update(float dt);
+void resetPositions();
 void draw3D();
 void draw2D();
 void mousePress(int32_t button, int32_t x, int32_t y);

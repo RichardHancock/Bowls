@@ -89,6 +89,15 @@ public:
 	*/
 	virtual void render(gl::Primitives*) = 0;
 
+	/**
+	Update the colour to this amount
+
+	The inputed Vec3 replaces the original transform
+
+	@param cgg::Vec3 the new colour.
+	*/
+	void updateColour(cgg::Vec3);
+
 protected:
 	
 	/// cgg::Mat43 containing a transform (position,rotation,scale).
