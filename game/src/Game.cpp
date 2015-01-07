@@ -102,26 +102,36 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 			hand->updateXVelocity(10.0f); //auto throw the ball
 			break;
 		case 5:
-			//change the ball
-			stage = 0;
-			resetPositions(g_camera);
-			Timer::stopTimer(11);
-			Timer::createTimer(11, 10.0f);
-			if (currentTurn == BluePlayer)
+			//check if game end
+			if (blueBowls.size() == 4 && redBowls.size() == 4)
 			{
-				redBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), redColour, bowlRadius));
-				hand = redBowls[redBowls.size() - 1];
-				currentTurn = RedPlayer;
-				handOffset = -1.6f;
+				stage == 6;//end game stage
+				resetPositions(g_camera);
+				hand == 0;
 			}
-			else if (currentTurn == RedPlayer)
+			else
 			{
-				blueBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), blueColour, bowlRadius));
-				hand = blueBowls[blueBowls.size() - 1];
-				currentTurn = BluePlayer;
-				handOffset = -1.6f;
+				//change the ball
+				stage = 0;
+				resetPositions(g_camera);
+				Timer::stopTimer(11);
+				Timer::createTimer(11, 10.0f);
+				if (currentTurn == BluePlayer)
+				{
+					redBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), redColour, bowlRadius));
+					hand = redBowls[redBowls.size() - 1];
+					currentTurn = RedPlayer;
+					handOffset = -1.6f;
+				}
+				else if (currentTurn == RedPlayer)
+				{
+					blueBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), blueColour, bowlRadius));
+					hand = blueBowls[blueBowls.size() - 1];
+					currentTurn = BluePlayer;
+					handOffset = -1.6f;
+				}
+				break;
 			}
-			break;
 		}
 	}
 	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enough to be a throw
@@ -300,21 +310,23 @@ void Game::playerTurnStart()
 //test the closest ball
 char Game::getClosestBallType()
 {
-	char closestType;
-	float redDistance = 0.0f;
-	float blueDistance = 0.0f;
+	float redDistance = 1000.0f;//initialise to huge numbers
+	float blueDistance = 1000.0f;//initialise to huge numbers
 	for (int i = 0; i < redBowls.size(); i++)
 	{
-		if (redDistance < Physics::distanceBetweenTwoSpheres(redBowls[i]->getPosition(), jack->getPosition()))
+		if (redDistance > Physics::distanceBetweenTwoSpheres(redBowls[i]->getPosition(), jack->getPosition()))
 		{
 			redDistance = Physics::distanceBetweenTwoSpheres(redBowls[i]->getPosition(), jack->getPosition());
+			cgg::logi(std::to_string(redDistance).c_str());
 		}
 	}
+	cgg::logi("blue");
 	for (int i = 0; i < blueBowls.size(); i++)
 	{
-		if (blueDistance < Physics::distanceBetweenTwoSpheres(blueBowls[i]->getPosition(), jack->getPosition()))
+		if (blueDistance > Physics::distanceBetweenTwoSpheres(blueBowls[i]->getPosition(), jack->getPosition()))
 		{
 			blueDistance = Physics::distanceBetweenTwoSpheres(blueBowls[i]->getPosition(), jack->getPosition());
+			cgg::logi(std::to_string(blueDistance).c_str());
 		}
 	}
 

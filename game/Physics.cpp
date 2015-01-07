@@ -31,7 +31,7 @@ bool Physics::collisionCheck(Ball* sphere1, Ball* sphere2, float dt)
 	sphere2Pos.y += (sphere2->getYVelocity() * dt);
 	sphere2Pos.z += (sphere2->getZVelocity() * dt);
 	//work out the distance between the spheres
-	float distance = distanceBetweenTospheres(sphere1Pos, sphere2Pos);
+	float distance = distanceBetweenTwoSpheres(sphere1Pos, sphere2Pos);
 	//if the distance between the two spheres is less than the sum of the radius's then there will be a collision
 	if (distance < radSum)
 	{
