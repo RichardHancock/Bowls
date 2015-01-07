@@ -10,9 +10,11 @@
 #include "gl/DepthStencilState.h"
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
+#include "lib/bass.h"
 // Backend Includes
 #include "Kinect.h"
 #include "Timer.h"
+#include "Audio.h"
 // Game Components Includes
 #include "Game.h"
 
@@ -30,8 +32,8 @@ gl::DepthStencilState* g_depthStencilState = 0;
 gl::RasterState* g_rasterState = 0;
 
 Game * game = new Game(sitMode,hand);
-
-
+bool initish = BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, NULL);
+Audio* test = new Audio("assets/audio/test.mp3", true);
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -85,13 +87,17 @@ void custom_gl_draw(gl::Device* device)
 //------------------------------------------------------------------------------------------------------------------------------------
 void init()
 {
+	if (HIWORD(BASS_GetVersion()) != BASSVERSION)
+	{
+		cgg::loge("Wrong Version");
+	}
 	cgg::fullScreen(true);
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
-
+	test->play(true);
 	game->startGame();
 }
 
@@ -151,6 +157,7 @@ void update(float dt)
 {
 	Timer::update(dt);
 	game->update(dt, g_camera);
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
