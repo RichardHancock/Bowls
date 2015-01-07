@@ -64,8 +64,18 @@ public:
 	*/
 	void render(gl::Primitives*);
 
+	/**
+	Returns the radius
+
+	@returns float the radius
+	*/
 	float getRadius();
 
+	/**
+	Returns the max throw strength
+
+	@retruns float the max throw strength
+	*/
 	float getThrow();
 
 protected:
@@ -73,6 +83,7 @@ protected:
 	/// Contains the radius of the sphere
 	float radius;
 
+	/// the maximum the ball can be thrown
 	float maxThrowStrength;
 };
 
