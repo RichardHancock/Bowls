@@ -9,19 +9,57 @@
 @brief Physics functions
 
 A Namespace that contains functions for the physics in the game.
+Code by Jamie Slowgrove
 */
 namespace Physics
 {
-	bool collisionCheck(Ball* ball1, Ball* ball2, float dt)
+	/**
+	Works out the distance between two spheres
+
+	Takes in two sphere positions and works out the distance between them
+
+	@param cgg::Vec3 one of the position of the spheres to be used in the collision
+	@param cgg::Vec3 one of the position of the spheres to be used in the collision
+	@param float the current delta time
+	@return bool if the collision occurs
+	*/
+	float distanceBetweenTospheres(cgg::Vec3 sphere1Pos, cgg::Vec3 sphere2Pos)
 	{
-		float radSum = ball1->getRadius() + ball2->getRadius();
-		cgg::Vec3 ball1Pos = ball1->getPosition();
-		cgg::Vec3 ball2Pos = ball2->getPosition();
-		float deltaX = (ball1Pos.x + (ball1->getXVelocity() * dt)) - (ball2Pos.x + (ball2->getXVelocity() * dt));
-		float deltaY = (ball1Pos.y + (ball1->getYVelocity() * dt)) - (ball2Pos.y + (ball2->getYVelocity() * dt));
-		float deltaZ = (ball1Pos.z + (ball1->getZVelocity() * dt)) - (ball2Pos.z + (ball2->getZVelocity() * dt));
+		// work out the difference in the coordinates of the 2 spheres
+		float deltaX = sphere1Pos.x - sphere2Pos.x;
+		float deltaY = sphere1Pos.y - sphere2Pos.y;
+		float deltaZ = sphere1Pos.z - sphere2Pos.z;
 		// sqrt (dX^2 + dY^2 + dZ^2)
 		float distance = sqrtf((deltaX * deltaX) + (deltaY * deltaY) + (deltaZ * deltaZ));
+		return distance;
+	}
+
+	/**
+	Checks if 2 spheres collide
+
+	Takes in two spheres and a delta time and uses this to detect if the spheres collide
+
+	@param Ball* one of the spheres to be used in the collision
+	@param Ball* one of the spheres to be used in the collision
+	@param float the current delta time
+	@return bool if the collision occurs
+	*/
+	bool collisionCheck(Ball* sphere1, Ball* sphere2, float dt)
+	{
+		// gets the combination of the 2 spheres radius
+		float radSum = sphere1->getRadius() + sphere2->getRadius();
+		// stores the vec3's positions of the spheres as local variables and sets them for what they will be next frame
+		cgg::Vec3 sphere1Pos = sphere1->getPosition();
+		sphere1Pos.x += (sphere1->getXVelocity() * dt);
+		sphere1Pos.y += (sphere1->getYVelocity() * dt);
+		sphere1Pos.z += (sphere1->getZVelocity() * dt);
+		cgg::Vec3 sphere2Pos = sphere2->getPosition();
+		sphere2Pos.x += (sphere2->getXVelocity() * dt);
+		sphere2Pos.y += (sphere2->getYVelocity() * dt);
+		sphere2Pos.z += (sphere2->getZVelocity() * dt);
+		//work out the distance between the spheres
+		float distance = distanceBetweenTospheres(sphere1Pos, sphere2Pos);
+		//if the distance between the two spheres is less than the sum of the radius's then there will be a collision
 		if (distance < radSum)
 		{
 			return true;
@@ -29,103 +67,177 @@ namespace Physics
 		return false;
 	}
 
-	bool collisionCheck(Ball* ball, Box* wall, float dt)
+	/**
+	Checks if a sphere collides with a wall
+
+	Takes in a sphere, a wall and a delta time and uses this to detect if the two collide
+
+	@param Ball* the sphere to be used in the collision
+	@param Box* the wall to be used in the collision
+	@param float the current delta time
+	@return bool if the collision occurs
+	*/
+	bool collisionCheck(Ball* sphere, Box* wall, float dt)
 	{		
-		float rad = ball->getRadius();
+		//local variables contain the values to be used with the calculation
+		float rad = sphere->getRadius();
+		//value is halved to make it work with the coordinates
 		float width = (wall->getWidth()*0.5);
 		float depth = (wall->getDepth()*0.5);
-		cgg::Vec3 ballPos = ball->getPosition();
-		ballPos.x += (ball->getXVelocity() * dt);
-		ballPos.z += (ball->getZVelocity() * dt);
+		cgg::Vec3 spherePos = sphere->getPosition();
+		//the position of the sphere next frame
+		spherePos.x += (sphere->getXVelocity() * dt);
+		spherePos.z += (sphere->getZVelocity() * dt);
 		cgg::Vec3 wallPos = wall->getPosition();
-		if (ballPos.x + rad < wallPos.x + width && ballPos.x + rad > wallPos.x - width
-			&& ballPos.z + rad < wallPos.z + depth && ballPos.z + rad > wallPos.z - depth
-			|| ballPos.x - rad < wallPos.x + width && ballPos.x - rad > wallPos.x - width
-			&& ballPos.z - rad < wallPos.z + depth && ballPos.z - rad > wallPos.z - depth)
+		//check if the position of the sphere is inside the wall
+		if (spherePos.x + rad < wallPos.x + width && spherePos.x + rad > wallPos.x - width
+			&& spherePos.z + rad < wallPos.z + depth && spherePos.z + rad > wallPos.z - depth
+			|| spherePos.x - rad < wallPos.x + width && spherePos.x - rad > wallPos.x - width
+			&& spherePos.z - rad < wallPos.z + depth && spherePos.z - rad > wallPos.z - depth)
 		{
 			return true;
 		}
 		return false;
 	}
 
-	void newCollisionVelocities(Ball* ball1, Ball* ball2)
+	/**
+	Works out the new velocities after the spheres collide
+
+	Takes in two spheres works out the new velocities of the spheres
+
+	@param Ball* one of the spheres to be updated
+	@param Ball* one of the spheres to be updated
+	*/
+	void newCollisionVelocities(Ball* sphere1, Ball* sphere2)
 	{
-		if (ball1->getXVelocity() == 0)
+		//if a velocity is 0 then update the velocity early so that it wont cause an error
+		if (sphere1->getXVelocity() == 0)
 		{
-			ball1->updateXVelocity((ball2->getXVelocity()));
-			ball2->updateXVelocity((ball2->getXVelocity()*0.75f));
+			//set the sphere with 0 velocity to the second velocity 
+			sphere1->updateXVelocity((sphere2->getXVelocity()));
+			//decrease the velocity of the sphere to appear as if some was lost on impact
+			sphere2->updateXVelocity((sphere2->getXVelocity()*0.75f));
 		}
-		if (ball1->getZVelocity() == 0)
+		//if a velocity is 0 then update the velocity early so that it wont cause an error
+		if (sphere1->getZVelocity() == 0)
 		{
-			ball1->updateZVelocity((ball2->getZVelocity()));
-			ball2->updateZVelocity((ball2->getZVelocity()*0.75f));
+			//set the sphere with 0 velocity to the second velocity 
+			sphere1->updateZVelocity((sphere2->getZVelocity()));
+			//decrease the velocity of the sphere to appear as if some was lost on impact
+			sphere2->updateZVelocity((sphere2->getZVelocity()*0.75f));
+		}
+		//if a velocity is 0 then update the velocity early so that it wont cause an error
+		if (sphere2->getXVelocity() == 0)
+		{
+			//set the sphere with 0 velocity to the second velocity 
+			sphere2->updateXVelocity((sphere1->getXVelocity()));
+			//decrease the velocity of the sphere to appear as if some was lost on impact
+			sphere1->updateXVelocity((sphere1->getXVelocity()*0.75f));
+		}
+		//if a velocity is 0 then update the velocity early so that it wont cause an error
+		if (sphere2->getZVelocity() == 0)
+		{
+			//set the sphere with 0 velocity to the second velocity 
+			sphere2->updateZVelocity((sphere1->getZVelocity()));
+			//decrease the velocity of the sphere to appear as if some was lost on impact
+			sphere1->updateZVelocity((sphere1->getZVelocity()*0.75f));
 		}
 
-		if (ball2->getXVelocity() == 0)
-		{
-			ball2->updateXVelocity((ball1->getXVelocity()));
-			ball1->updateXVelocity((ball1->getXVelocity()*0.75f));
-		}
-		if (ball2->getZVelocity() == 0)
-		{
-			ball2->updateZVelocity((ball1->getZVelocity()));
-			ball1->updateZVelocity((ball1->getZVelocity()*0.75f));
-		}
+		//create local variables of the 1st spheres velocities so that the second sphere can use them
+		float tmpSphere1X = sphere1->getXVelocity();
+		float tmpSphere1Z = sphere1->getZVelocity();
 
-		float tmpBall1X = ball1->getXVelocity();
-		float tmpBall1Z = ball1->getZVelocity();
-
-		ball1->updateXVelocity((ball2->getXVelocity()*0.75f));
-		ball1->updateZVelocity((ball2->getZVelocity()*0.75f));
-		ball2->updateXVelocity((tmpBall1X*0.75f));
-		ball2->updateZVelocity((tmpBall1Z*0.75f));
+		//sets the 1st sphere velocities to the value of 2nd sphere velocities with a decrease velocity from impact
+		sphere1->updateXVelocity((sphere2->getXVelocity()*0.75f));
+		sphere1->updateZVelocity((sphere2->getZVelocity()*0.75f));
+		//sets the 2nd sphere velocities to the value of 1st sphere velocities with a decrease velocity from impact
+		sphere2->updateXVelocity((tmpSphere1X*0.75f));
+		sphere2->updateZVelocity((tmpSphere1Z*0.75f));
 	}
 
-	void newCollisionVelocities(Ball* ball, Box* wall)
+	/**
+	Works out the new velocities after the sphere collides with a wall
+
+	Takes in the sphere and wall and works out the new velocities of the sphere
+
+	@param Ball* the sphere to be updated
+	@param Box* the wall it has collided with
+	*/
+	void newCollisionVelocities(Ball* sphere, Box* wall)
 	{
+		//check if the wall is running along the z axis
 		if (!wall->xAxisCheck())
 		{
-			ball->updateZVelocity(-(ball->getZVelocity()));
+			//invert the z velocity
+			sphere->updateZVelocity(-(sphere->getZVelocity()));
 		}
 		else
 		{
-			ball->updateXVelocity(-(ball->getXVelocity()));
+			//invert the x velocity
+			sphere->updateXVelocity(-(sphere->getXVelocity()));
 		}
 	}
 
-	void applyFriction(Ball* ball)
+	/**
+	Applies Friction to the sphere
+
+	Takes in the sphere and adds friction to its velocities
+
+	@param Ball* the sphere to be updated
+	*/
+	void applyFriction(Ball* sphere)
 	{
-		// x friction
-		if (ball->getXVelocity() < 0)
+		// if the x velocity is less than 0
+		if (sphere->getXVelocity() < 0)
 		{
-			ball->updateXVelocity(ball->getXVelocity() + 0.1);
+			//add 0.1 to decrease the velocity
+			sphere->updateXVelocity(sphere->getXVelocity() + 0.1);
 		}
-		if (ball->getXVelocity() > 0)
+		// if the x velocity is greater than 0
+		if (sphere->getXVelocity() > 0)
 		{
-			ball->updateXVelocity(ball->getXVelocity() - 0.1);
+			//subtract 0.1 to decrease the velocity
+			sphere->updateXVelocity(sphere->getXVelocity() - 0.1);
 		}
-		if (ball->getXVelocity() < 0.1 && ball->getXVelocity() > -0.1)
+		//if the x velocity is between 0.1 and - 0.1
+		if (sphere->getXVelocity() < 0.1 && sphere->getXVelocity() > -0.1)
 		{
-			ball->updateXVelocity(0.0f);
+			//set the x velocity to 0
+			sphere->updateXVelocity(0.0f);
 		}
 
-		// z friction
-		if (ball->getZVelocity() < 0)
+		// if the z velocity is less than 0
+		if (sphere->getZVelocity() < 0)
 		{
-			ball->updateZVelocity(ball->getZVelocity() + 0.1);
+			//add 0.1 to decrease the velocity
+			sphere->updateZVelocity(sphere->getZVelocity() + 0.1);
 		}
-		if (ball->getZVelocity() > 0)
+		// if the z velocity is greater than 0
+		if (sphere->getZVelocity() > 0)
 		{
-			ball->updateZVelocity(ball->getZVelocity() - 0.1);
+			//subtract 0.1 to decrease the velocity
+			sphere->updateZVelocity(sphere->getZVelocity() - 0.1);
 		}
-		if (ball->getZVelocity() < 0.1 && ball->getZVelocity() > -0.1)
+		//if the z velocity is between 0.1 and - 0.1
+		if (sphere->getZVelocity() < 0.1 && sphere->getZVelocity() > -0.1)
 		{
-			ball->updateZVelocity(0.0f);
+			//set the z velocity to 0
+			sphere->updateZVelocity(0.0f);
 		}
 	}
 
+	/**
+	Works out the velocity from the kinect input
+
+	Takes in the change in distance and change in time from the kinect output and converts it to a velocity
+
+	@param float the change in distance
+	@param float the change in time
+	@returns float the calculated velocity
+	*/
 	float kinectInputVelocity(float distance, float time)
 	{
+		//velocity = change in distance/ change in time
 		float velocity = distance / time;
 		return velocity;
 	}

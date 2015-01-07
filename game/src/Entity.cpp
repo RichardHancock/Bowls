@@ -29,3 +29,7 @@ cgg::Vec3 Entity::getPosition()
 	return pos;
 }
 
+void Entity::updateColour(cgg::Vec3 changeTo)
+{
+	colour = changeTo;
+}
