@@ -35,6 +35,7 @@ private:
 
 	std::vector<Bowl*> redBowls;
 	std::vector<Bowl*> blueBowls;
+	std::vector<Ball*> scoreDisplay;
 	Box * cues[2];
 	Ball * closestBowlType[2];
 	Jack * jack;
@@ -47,6 +48,9 @@ private:
 
 	KinectInput* kinectSensor;
 	
+	int blueScore;
+	int redScore;
+
 	//colours
 	const cgg::Vec3 redColour = { 1, 0, 0 };
 	const cgg::Vec3 blueColour = { 0, 0, 1 };
@@ -54,6 +58,13 @@ private:
 	const cgg::Vec3 greenColour = { 0, 1, 0 };
 	const cgg::Vec3 whiteColour = { 1, 1, 1 };
 
+	//Original times are the ones on the left 
+	///@todo Make first timer affected by these
+	const float aimStage = 10.0f - 8.0f;
+	const float pullBackStage = 5.0f - 3.0f;
+	const float throwStage = 10.0f - 6.0f;
+	const float autoThrowTime = 10.0f - 6.0f;
+	const float delayBeforeNextTurn = 10.0f - 6.0f;
 	const float bowlRadius = 0.4;
 	const float jackRadius = 0.3;
 	float handOffset = -1.7f;
@@ -62,6 +73,8 @@ private:
 	char getClosestBallType();
 	void resetPositions(cgg::MayaCamera &g_camera);
 	void ballWallCollisionTests(Ball *, float);
+	void gameOver();
+	void displayScore();
 
 	inline int randomNumber(int minimum, int maximum)
 	{

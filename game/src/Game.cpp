@@ -7,6 +7,9 @@ Game::Game(bool sitMode, TrackingPoint hand)
 	stage = 0; //the current cue stage
 	lockedZ = 0.0f; // the z position to be used with input maths
 	lockedX = 0.0f;
+
+	blueScore = 0;
+	redScore = 0;
 	// TODO: Might need a conditional to check here for errors
 	kinectSensor->startTracking();
 }
@@ -72,7 +75,7 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		closestBowlType[1]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
 		handOffset = -1.5f;
 		Timer::stopTimer(11);
-		Timer::createTimer(11, 10.0f);
+		Timer::createTimer(11, aimStage);
 	}
 
 	if (Timer::hasTimerFinished(11) && stage < 5) //if it is time for the next stage and the stage is less than 6
@@ -86,28 +89,29 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 			cues[0]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 			cues[1]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 			lockedZ = handPos.z; //sets the current hand z to the locked z
-			Timer::createTimer(11, 5.0f); //starts the 5 second timer for this stage
+			Timer::createTimer(11, pullBackStage); //starts the 5 second timer for this stage
 			break;
 		case 2:
 			cues[0]->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
 			cues[1]->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
 			lockedX = handPos.x;// sets the current hand x to the locked x
 			lockedZ = handPos.z;
-			Timer::createTimer(19, 10.0f); //sets ups the timer for the kinect input maths
-			Timer::createTimer(11, 10.0f); //sets up the backup timer so that it auto throws after 10 seconds
+			Timer::createTimer(19, throwStage); //sets ups the timer for the kinect input maths
+			Timer::createTimer(11, autoThrowTime); //sets up the backup timer so that it auto throws after 10 seconds
 			break;
 		case 3:
 			stage = 4;
-			Timer::createTimer(11, 10.0f); //set time to reset the game after 10 seconds
+			Timer::createTimer(11, delayBeforeNextTurn); //set time to reset the game after 10 seconds
 			hand->updateXVelocity(10.0f); //auto throw the ball
 			break;
 		case 5:
 			//check if game end
 			if (blueBowls.size() == 4 && redBowls.size() == 4)
 			{
-				stage == 6;//end game stage
+				stage = 6;//end game stage
 				resetPositions(g_camera);
-				hand == 0;
+				hand = NULL;
+				gameOver();
 			}
 			else
 			{
@@ -115,7 +119,7 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 				stage = 0;
 				resetPositions(g_camera);
 				Timer::stopTimer(11);
-				Timer::createTimer(11, 10.0f);
+				Timer::createTimer(11, aimStage);
 				if (currentTurn == BluePlayer)
 				{
 					redBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), redColour, bowlRadius));
@@ -130,8 +134,9 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 					currentTurn = BluePlayer;
 					handOffset = -1.6f;
 				}
-				break;
+				
 			}
+			break;
 		}
 	}
 	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enough to be a throw
@@ -251,7 +256,15 @@ void Game::render(gl::Primitives* g_prims)
 	for (int i = 0; i < blueBowls.size(); i++)
 	{
 		blueBowls[i]->render(g_prims);
-	}	
+	}
+
+	//Score Balls
+	for (int i = 0; i < scoreDisplay.size(); i++)
+	{
+		scoreDisplay[i]->render(g_prims);
+	}
+
+	//World
 	ground->render(g_prims);
 	endWall->render(g_prims);
 	sideWall1->render(g_prims);
@@ -373,5 +386,98 @@ void Game::ballWallCollisionTests(Ball * ball, float dt)
 	{
 		//new velocities
 		Physics::newCollisionVelocities(ball, sideWall2);
+	}
+}
+
+void Game::gameOver()
+{
+	cgg::Vec3 jackPos = jack->getPosition();
+
+	std::vector<float> redBowlsDistance;
+	std::vector<float> blueBowlsDistance;
+
+	for (int r = 0; r < (int)redBowls.size(); r++)
+	{
+		cgg::Vec3 rPos = redBowls[r]->getPosition();
+		float distance = Physics::distanceBetweenTwoSpheres(rPos, jackPos);
+		redBowlsDistance.push_back(distance);
+	}
+	for (int b = 0; b < (int)blueBowls.size(); b++)
+	{
+		cgg::Vec3 bPos = blueBowls[b]->getPosition();
+		float distance = Physics::distanceBetweenTwoSpheres(bPos, jackPos);
+		blueBowlsDistance.push_back(distance);
+	}
+
+	std::sort(redBowlsDistance.begin(), redBowlsDistance.end());
+	std::sort(blueBowlsDistance.begin(), blueBowlsDistance.end());
+
+	PlayerName winner;
+
+	winner = (blueBowlsDistance[0] < redBowlsDistance[0] ? BluePlayer : RedPlayer);
+	std::string winnerName = (winner == RedPlayer ? "Red Player" : "Blue Player");
+	std::string message = "Game Over - " + winnerName + " Wins!";
+	cgg::logi(message.c_str());
+
+	//Calculate score
+	int score = 1;
+
+	if (winner == RedPlayer)
+	{
+		//Start one later as we already know at least one point was achieved.
+		for (int i = 1; i < redBowlsDistance.size(); i++)
+		{
+			if (redBowlsDistance[i] < blueBowlsDistance[0])
+			{
+				score++;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		redScore = score;
+	}
+	else
+	{
+		//Start one later as we already know at least one point was achieved.
+		for (int i = 1; i < blueBowlsDistance.size(); i++)
+		{
+			if (blueBowlsDistance[i] < redBowlsDistance[0])
+			{
+				score++;
+			}
+			else
+			{
+				break;
+			}
+		}
+		blueScore = score;
+	}
+
+	displayScore();
+}
+
+void Game::displayScore()
+{
+	float radius = 1;
+	float gapX = 3.0f;
+	float startX = -20.0f;
+	float redZ = -10.0f;
+	float blueZ = 10.0f;
+
+	for (int i = 0; i < (int)redScore; i++)
+	{
+		cgg::Vec3 pos = { startX + (gapX * i), 0, redZ };
+		Ball* scoreBall = new Ball(pos, redColour, radius);
+		scoreDisplay.push_back(scoreBall);
+	}
+
+	for (int i = 0; i < (int)blueScore; i++)
+	{
+		cgg::Vec3 pos = { startX + (gapX * i), 0, blueZ };
+		Ball* scoreBall = new Ball(pos, blueColour, radius);
+		scoreDisplay.push_back(scoreBall);
 	}
 }
