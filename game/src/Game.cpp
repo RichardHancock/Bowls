@@ -7,6 +7,8 @@ Game::Game(bool sitMode, TrackingPoint hand)
 	stage = 0; //the current cue stage
 	lockedZ = 0.0f; // the z position to be used with input maths
 	lockedX = 0.0f;
+	// TODO: Might need a conditional to check here for errors
+	kinectSensor->startTracking();
 }
 
 Game::~Game()
@@ -22,9 +24,18 @@ Game::~Game()
 	}
 
 	delete jack;
+	delete hand;
+	delete ground;
+	delete endWall;
+	delete sideWall1;
+	delete sideWall2;
+	delete cues[0];
+	delete cues[1];
+	delete closestBowlType[0];
+	delete closestBowlType[1];
 }
 
-void Game::update(float dt)
+void Game::update(float dt, cgg::MayaCamera &g_camera)
 {
 	kinectSensor->update();
 	cgg::Vec3 handPos = kinectSensor->getHandPos();
@@ -42,9 +53,10 @@ void Game::update(float dt)
 		break;
 	}
 
-	//jack->updatePosition(cgg::Vec3(-17, -1, 0) + handPos);
-
-	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
+	if (stage == 4)
+	{
+		g_camera.setCentreOfInterest(jack->getPosition());
+	}
 
 	if (cgg::isKeyPressed(cgg::kKeyEscape))
 	{
@@ -54,7 +66,7 @@ void Game::update(float dt)
 	{
 		//reset the game
 		stage = 0;
-		resetPositions();
+		resetPositions(g_camera);
 		Timer::stopTimer(11);
 		Timer::createTimer(11, 10.0f);
 	}
@@ -67,38 +79,34 @@ void Game::update(float dt)
 		switch (stage)//set up the next stage
 		{
 		case 1:
-
 			cues[0]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 			cues[1]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
-
 			lockedZ = handPos.z; //sets the current hand z to the locked z
-
 			Timer::createTimer(11, 5.0f); //starts the 5 second timer for this stage
 			break;
 		case 2:
 			cues[0]->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
 			cues[1]->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
-
 			lockedX = handPos.x;// sets the current hand x to the locked x
 			lockedZ = handPos.z;
 			Timer::createTimer(19, 10.0f); //sets ups the timer for the kinect input maths
 			Timer::createTimer(11, 10.0f); //sets up the backup timer so that it auto throws after 10 seconds
-
 			break;
 		case 3:
+			stage = 4;
 			Timer::createTimer(11, 10.0f); //set time to reset the game after 10 seconds
 			jack->updateXVelocity(10.0f); //auto throw the ball
 			break;
-		case 4:
+		case 5:
 			//reset the game
 			stage = 0;
-			resetPositions();
+			resetPositions(g_camera);
 			Timer::stopTimer(11);
 			Timer::createTimer(11, 10.0f);
 			break;
 		}
 	}
-	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enougth to be a throw
+	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enough to be a throw
 	{
 		float testTime = Timer::stopTimer(19); //get the time it took to throw
 		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow()) //check if the new velocity is greater than the max throw
@@ -110,90 +118,59 @@ void Game::update(float dt)
 			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
 		}
 		jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
-		//set the game to reset in 10 seconds
+		stage = 4;//set the game to reset in 10 seconds
 		Timer::stopTimer(11);
 		Timer::createTimer(11, 10.0f);
 	}
+	
+	//red ball wall collision tests
+	for (int i = 0; i < redBowls.size(); i++)
+	{
+		ballWallCollisionTests(redBowls[i], dt);
+	}
+	//blue ball wall collision tests
+	for (int i = 0; i < blueBowls.size(); i++)
+	{
+		ballWallCollisionTests(blueBowls[i], dt);
+	}
+	//jack ball wall collision tests
+	ballWallCollisionTests(jack, dt);
+	
+	//ball ball collision tests
+	std::vector<Ball*> allBalls;
+	allBalls.reserve(redBowls.size() + blueBowls.size() + 1);
+	allBalls.insert(allBalls.end(), redBowls.begin(), redBowls.end());
+	allBalls.insert(allBalls.end(), blueBowls.begin(), blueBowls.end());
+	allBalls.push_back(jack);
+	for (int i = 0; i < allBalls.size(); i++)
+	{
+		for (int j = 0; j < allBalls.size(); j++)
+		{
+			//ball ball collision check tests
+			if (i != j && Physics::collisionCheck(allBalls[i], allBalls[j], dt))
+			{
+				//new velocities
+				Physics::newCollisionVelocities(allBalls[i], allBalls[j]);
+			}
+		}
+	}
+	allBalls.clear();
 
-	//ball ball collision check tests
-	if (Physics::collisionCheck(red, blue, dt))
+	//move balls & apply friction
+	for (int i = 0; i < redBowls.size(); i++)
 	{
-		//new velocities
-		Physics::newCollisionVelocities(red, blue);
+		redBowls[i]->changePosition(cgg::Vec3(redBowls[i]->getXVelocity() * dt, 0, redBowls[i]->getZVelocity() * dt));
+		Physics::applyFriction(redBowls[i]);
 	}
-	if (Physics::collisionCheck(red, jack, dt))
+	for (int i = 0; i < blueBowls.size(); i++)
 	{
-		//new velocities
-		Physics::newCollisionVelocities(red, jack);
+		blueBowls[i]->changePosition(cgg::Vec3(blueBowls[i]->getXVelocity() * dt, 0, blueBowls[i]->getZVelocity() * dt));
+		Physics::applyFriction(blueBowls[i]);
 	}
-	if (Physics::collisionCheck(blue, jack, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, jack);
-	}
-	if (Physics::collisionCheck(red, blue, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, blue);
-	}
-	//wall wall collision tests
-	if (Physics::collisionCheck(jack, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, endWall);
-	}
-	if (Physics::collisionCheck(jack, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, sideWall1);
-	}
-	if (Physics::collisionCheck(jack, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, sideWall2);
-	}
-	if (Physics::collisionCheck(blue, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, endWall);
-	}
-	if (Physics::collisionCheck(blue, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, sideWall1);
-	}
-	if (Physics::collisionCheck(blue, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, sideWall2);
-	}
-	if (Physics::collisionCheck(blue, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, endWall);
-	}
-	if (Physics::collisionCheck(red, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, sideWall1);
-	}
-	if (Physics::collisionCheck(red, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, sideWall2);
-	}
-
-	//move balls
-	red->changePosition(cgg::Vec3(red->getXVelocity() * dt, 0, red->getZVelocity() * dt));
-	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
-	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
-
-	//friction
-	Physics::applyFriction(red);
-	Physics::applyFriction(blue);
+	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));	
 	Physics::applyFriction(jack);
 
-	//update the closest ball
+	//update the closest ball type
 	if (stage > 2)
 	{
 		if (getClosestBallType() == 'B')
@@ -211,117 +188,32 @@ void Game::update(float dt)
 
 void Game::loadWorld()
 {
-	// generate a red sphere
-	maths::Mat43 m = maths::Mat43::kIdentity;
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -2;
-
-	maths::Vec3 colour;
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	red = new Bowl(m, colour, 1);
-
-	// generate a blue sphere
-	m.w.x = 8;
-	m.w.z = 0;
-	m.w.y = -2;
-
-	colour.x = 0;
-	colour.y = 0;
-	colour.z = 1;
-	blue = new Bowl(m, colour, 1);
-
+	//generate a red ball
+	redBowls.push_back(new Bowl(maths::Vec3(0.0f,-2.0f,0.0f), redColour, bowlRadius));
+	//generate a blue ball
+	blueBowls.push_back(new Bowl(maths::Vec3(8.0f, -2.0f, 0.0f), blueColour, bowlRadius));
 	// generate a jack
-	m.w.x = -20;
-	m.w.z = 0;
-	m.w.y = 0;
+	jack = new Jack(maths::Vec3(-20.0f, 0.0f, 0.0f), yellowColour, jackRadius);
 
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 0;
-	jack = new Jack(m, colour, 0.5);
+	// generate the balls to show what team is closest
+	closestBowlType[0] = new Ball(maths::Vec3(-19.5f, 0.0f, -5.5f), whiteColour, jackRadius);
+	closestBowlType[1] = new Ball(maths::Vec3(-19.5f, 0.0f, 5.5f), whiteColour, jackRadius);
 
-	// generate a ball to show what team is closest
-	m.w.x = -19.5;
-	m.w.z = -5.5;
-	m.w.y = 0;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	closestBowlType[0] = new Ball(m, colour, 0.5);
-
-	// generate a ball to show what team is closest
-	m.w.x = -19.5;
-	m.w.z = 5.5;
-	m.w.y = 0;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	closestBowlType[1] = new Ball(m, colour, 0.5);
-
-	// generate a cue
-	m.w.x = -19.5f;
-	m.w.z = -5.5f;
-	m.w.y = -0.5f;
-
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	cues[0] = new Box(m, colour, 1, false);
-
-	// generate a cue
-	m.w.x = -19.5f;
-	m.w.z = 5.5f;
-	m.w.y = -0.5f;
-
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	cues[1] = new Box(m, colour, 1, false);
+	// generate the cues
+	cues[0] = new Box(maths::Vec3(-19.5f, -0.5f, -5.5f), redColour, maths::Vec3(1.0f), false);
+	cues[1] = new Box(maths::Vec3(-19.5f, -0.5f, 5.5f), redColour, maths::Vec3(1.0f), false);
 
 	// generate ground
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -4;
-
-	colour.x = 0;
-	colour.y = 1;
-	colour.z = 0;
-	ground = new Box(m, colour, cgg::Vec3(40, 2, 10), false);
+	ground = new Box(maths::Vec3(0.0f, -4.0f, 0.0f), greenColour, cgg::Vec3(40, 2, 10), false);
 
 	// generate endWall
-	m.w.x = 20.5f;
-	m.w.z = 0;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12), true);
+	endWall = new Box(maths::Vec3(20.5f, -3.0f, 0.0f), whiteColour, cgg::Vec3(1, 4, 12), true);
 
 	// generate sideWall1
-	m.w.x = 0;
-	m.w.z = -5.5f;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
+	sideWall1 = new Box(maths::Vec3(0.0f, -3.0f, -5.5f), whiteColour, cgg::Vec3(40, 4, 1), false);
 
 	// generate sideWall2
-	m.w.x = 0;
-	m.w.z = 5.5f;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
+	sideWall2 = new Box(maths::Vec3(0.0f, -3.0f, 5.5f), whiteColour, cgg::Vec3(40, 4, 1), false);
 }
 
 void Game::render(gl::Primitives* g_prims)
@@ -331,8 +223,14 @@ void Game::render(gl::Primitives* g_prims)
 	cues[0]->render(g_prims);
 	cues[1]->render(g_prims);
 	jack->render(g_prims);
-	red->render(g_prims);
-	blue->render(g_prims);
+	for (int i = 0; i < redBowls.size(); i++)
+	{
+		redBowls[i]->render(g_prims);
+	}
+	for (int i = 0; i < blueBowls.size(); i++)
+	{
+		blueBowls[i]->render(g_prims);
+	}	
 	ground->render(g_prims);
 	endWall->render(g_prims);
 	sideWall1->render(g_prims);
@@ -393,8 +291,22 @@ void Game::throwBowl()
 char Game::getClosestBallType()
 {
 	char closestType;
-	float redDistance = Physics::distanceBetweenTospheres(red->getPosition(), jack->getPosition());
-	float blueDistance = Physics::distanceBetweenTospheres(blue->getPosition(), jack->getPosition());
+	float redDistance = 0.0f;
+	float blueDistance = 0.0f;
+	for (int i = 0; i < redBowls.size(); i++)
+	{
+		if (redDistance < Physics::distanceBetweenTospheres(redBowls[i]->getPosition(), jack->getPosition()))
+		{
+			redDistance = Physics::distanceBetweenTospheres(redBowls[i]->getPosition(), jack->getPosition());
+		}
+	}
+	for (int i = 0; i < blueBowls.size(); i++)
+	{
+		if (blueDistance < Physics::distanceBetweenTospheres(blueBowls[i]->getPosition(), jack->getPosition()))
+		{
+			blueDistance = Physics::distanceBetweenTospheres(blueBowls[i]->getPosition(), jack->getPosition());
+		}
+	}
 	if (redDistance < blueDistance)
 	{
 		return 'R';
@@ -406,13 +318,37 @@ char Game::getClosestBallType()
 }
 
 //reset the positions
-void Game::resetPositions()
+void Game::resetPositions(cgg::MayaCamera &g_camera)
 {
-	red->updatePosition(maths::Vec3(0.0f, -2.0f, 0.0f));
-	blue->updatePosition(maths::Vec3(8.0f, -2.0f, 0.0f));
+	redBowls[0]->updatePosition(maths::Vec3(0.0f, -2.0f, 0.0f));
+	blueBowls[0]->updatePosition(maths::Vec3(8.0f, -2.0f, 0.0f));
 	jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
 	cues[0]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 	cues[1]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 	closestBowlType[0]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
 	closestBowlType[1]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
+	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
+}
+
+//ball wall collision tests
+void Game::ballWallCollisionTests(Ball * ball, float dt)
+{
+	//end wall test
+	if (Physics::collisionCheck(ball, endWall, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(ball, endWall);
+	}
+	//side wall 1 test
+	if (Physics::collisionCheck(ball, sideWall1, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(ball, sideWall1);
+	}
+	//side wall 2 test
+	if (Physics::collisionCheck(ball, sideWall2, dt))
+	{
+		//new velocities
+		Physics::newCollisionVelocities(ball, sideWall2);
+	}
 }

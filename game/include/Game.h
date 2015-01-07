@@ -24,7 +24,7 @@ public:
 	Game(bool, TrackingPoint);
 	~Game();
 
-	void update(float dt);
+	void update(float dt, cgg::MayaCamera &g_camera);
 	void loadWorld();
 	void render(gl::Primitives*);
 	void startGame();
@@ -40,10 +40,6 @@ private:
 	Jack * jack;
 	PlayerName currentTurn;
 	Ball * hand;
-	gl::Primitives * g_prims;
-
-	Bowl* red;
-	Bowl* blue;
 	Box* ground;
 	Box* endWall;
 	Box* sideWall1;
@@ -51,9 +47,12 @@ private:
 
 	KinectInput* kinectSensor;
 	
+	//colours
 	const cgg::Vec3 redColour = { 1, 0, 0 };
 	const cgg::Vec3 blueColour = { 0, 0, 1 };
-	const cgg::Vec3 jackColour = { 1, 1, 0 };
+	const cgg::Vec3 yellowColour = { 1, 1, 0 };
+	const cgg::Vec3 greenColour = { 0, 1, 0 };
+	const cgg::Vec3 whiteColour = { 1, 1, 1 };
 
 	const float bowlRadius = 1;
 	const float jackRadius = 0.5;
@@ -61,7 +60,8 @@ private:
 	void playerTurnStart();
 	void throwBowl();
 	char getClosestBallType();
-	void resetPositions();
+	void resetPositions(cgg::MayaCamera &g_camera);
+	void ballWallCollisionTests(Ball *, float);
 
 	inline int randomNumber(int minimum, int maximum)
 	{

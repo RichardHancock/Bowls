@@ -21,12 +21,13 @@ Ball::Ball(cgg::Vec3 pos) : CollisionEntity(pos)
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 0;
+	maxThrowStrength = 0.0f;
 }
 
 Ball::Ball(cgg::Vec3 pos, cgg::Vec3 colour, float radius)
 	: CollisionEntity(pos, colour), radius(radius)
 {
-
+	maxThrowStrength = 0.0f;
 }
 
 void Ball::render(gl::Primitives* primitiveList)

@@ -31,8 +31,6 @@ gl::RasterState* g_rasterState = 0;
 
 Game * game = new Game(sitMode,hand);
 
-KinectInput kinect(sitMode,hand);
-
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -90,9 +88,6 @@ void init()
 	cgg::fullScreen(true);
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
-	
-	// TODO: Might need a conditional to check here for errors
-	kinect.startTracking();
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
@@ -155,7 +150,7 @@ void kill()
 void update(float dt)
 {
 	Timer::update(dt);
-	game->update(dt);
+	game->update(dt, g_camera);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------

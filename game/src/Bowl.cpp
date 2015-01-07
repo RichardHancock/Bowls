@@ -21,12 +21,13 @@ Bowl::Bowl(cgg::Vec3 pos) : Ball(pos)
 	colour.x = 1;
 	colour.y = 1;
 	colour.z = 0;
+	maxThrowStrength = 3.0f;
 }
 
 Bowl::Bowl(cgg::Vec3 pos, cgg::Vec3 colour, float radius)
 	:Ball(pos, colour, radius)
 {
-
+	maxThrowStrength = 3.0f;
 }
 
 void Bowl::render(gl::Primitives* primitiveList)
