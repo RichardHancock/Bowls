@@ -120,8 +120,6 @@ void loadAssets()
 	raster_desc.cullMode = gl::kCullBack;
 	g_rasterState = cgg::getGlDevice()->createRasterState(raster_desc);
 
-	// setup inital cue timer
-	Timer::createTimer(11, 10.0f);
 	
 }
 

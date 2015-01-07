@@ -26,6 +26,11 @@ Game::~Game()
 		delete blueBowls[i];
 	}
 
+	for (int i = 0; i < scoreDisplay.size(); i++)
+	{
+		delete scoreDisplay[i];
+	}
+
 	delete jack;
 	delete hand;
 	delete ground;
@@ -34,8 +39,9 @@ Game::~Game()
 	delete sideWall2;
 	delete cues[0];
 	delete cues[1];
-	delete closestBowlType[0];
-	delete closestBowlType[1];
+	delete cueHat[0];
+	delete cueHat[1];
+	delete kinectSensor;
 }
 
 void Game::update(float dt, cgg::MayaCamera &g_camera)
@@ -71,9 +77,27 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		stage = 0;
 		resetPositions(g_camera);
 		jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
-		closestBowlType[0]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
-		closestBowlType[1]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
 		handOffset = -1.5f;
+		hand = jack;
+		for (int i = 0; i < redBowls.size(); i++)
+		{
+			delete redBowls[i];
+		}
+
+		for (int i = 0; i < blueBowls.size(); i++)
+		{
+			delete blueBowls[i];
+		}
+
+		for (int i = 0; i < scoreDisplay.size(); i++)
+		{
+			delete scoreDisplay[i];
+		}
+		redBowls.clear();
+		blueBowls.clear();
+		scoreDisplay.clear();
+		blueScore = 0;
+		redScore = 0;
 		Timer::stopTimer(11);
 		Timer::createTimer(11, aimStage);
 	}
@@ -153,7 +177,7 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		hand->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
 		stage = 4;//set the game to reset in 10 seconds
 		Timer::stopTimer(11);
-		Timer::createTimer(11, 10.0f);
+		Timer::createTimer(11, delayBeforeNextTurn);
 	}
 	
 	//red ball wall collision tests
@@ -202,32 +226,15 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 	}
 	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
 	Physics::applyFriction(jack);
-
-	//update the closest ball type
-	if (stage > 2 && redBowls.size() > 0 || stage > 2 &&  blueBowls.size() > 0)
-	{
-		if (getClosestBallType() == 'B')
-		{
-			closestBowlType[0]->updateColour(maths::Vec3(0.0f, 0.0f, 1.0f));
-			closestBowlType[1]->updateColour(maths::Vec3(0.0f, 0.0f, 1.0f));
-		}
-		else
-		{
-			closestBowlType[0]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
-			closestBowlType[1]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
-		}
-	}
 }
 
 void Game::loadWorld()
 {
-	// generate the balls to show what team is closest
-	closestBowlType[0] = new Ball(maths::Vec3(-19.5f, 0.0f, -5.5f), whiteColour, 0.5f);
-	closestBowlType[1] = new Ball(maths::Vec3(-19.5f, 0.0f, 5.5f), whiteColour, 0.5f);
-
-	// generate the cues
+	// generate the cues each cue has a hat, just for looks :-)
 	cues[0] = new Box(maths::Vec3(-19.5f, -0.5f, -5.5f), redColour, maths::Vec3(1.0f), false);
+	cueHat[0] = new Ball(maths::Vec3(-19.5f, 0.0f, -5.5f), whiteColour, 0.5f);
 	cues[1] = new Box(maths::Vec3(-19.5f, -0.5f, 5.5f), redColour, maths::Vec3(1.0f), false);
+	cueHat[1] = new Ball(maths::Vec3(-19.5f, 0.0f, 5.5f), whiteColour, 0.5f);
 
 	// generate ground
 	ground = new Box(maths::Vec3(0.0f, -4.0f, 0.0f), greenColour, cgg::Vec3(40, 2, 10), false);
@@ -244,10 +251,10 @@ void Game::loadWorld()
 
 void Game::render(gl::Primitives* g_prims)
 {
-	closestBowlType[0]->render(g_prims);
-	closestBowlType[1]->render(g_prims);
 	cues[0]->render(g_prims);
+	cueHat[0]->render(g_prims);
 	cues[1]->render(g_prims);
+	cueHat[1]->render(g_prims);
 	jack->render(g_prims);
 	for (int i = 0; i < redBowls.size(); i++)
 	{
@@ -290,7 +297,9 @@ void Game::startGame()
 
 	//set the jack to the players hand
 	hand = jack;
-	
+
+	// setup initial cue timer
+	Timer::createTimer(11, aimStage);
 }
 
 void Game::playerTurnStart()
@@ -461,23 +470,23 @@ void Game::gameOver()
 
 void Game::displayScore()
 {
-	float radius = 1;
-	float gapX = 3.0f;
-	float startX = -20.0f;
-	float redZ = -10.0f;
-	float blueZ = 10.0f;
+	float gapY = 1.0f;
+	float startY = -5.0f;
+	float bothX = -20.0f;
+	float redZ = -7.0f;
+	float blueZ = 7.0f;
 
 	for (int i = 0; i < (int)redScore; i++)
 	{
-		cgg::Vec3 pos = { startX + (gapX * i), 0, redZ };
-		Ball* scoreBall = new Ball(pos, redColour, radius);
+		cgg::Vec3 pos = { bothX, startY + (gapY * i), redZ };
+		Ball* scoreBall = new Ball(pos, redColour, bowlRadius);
 		scoreDisplay.push_back(scoreBall);
 	}
 
 	for (int i = 0; i < (int)blueScore; i++)
 	{
-		cgg::Vec3 pos = { startX + (gapX * i), 0, blueZ };
-		Ball* scoreBall = new Ball(pos, blueColour, radius);
+		cgg::Vec3 pos = { bothX, startY + (gapY * i), blueZ };
+		Ball* scoreBall = new Ball(pos, blueColour, bowlRadius);
 		scoreDisplay.push_back(scoreBall);
 	}
 }
