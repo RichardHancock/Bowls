@@ -308,8 +308,16 @@ void update(float dt)
 	{
 		exit(0);
 	}
+	if (cgg::isKeyPressed(cgg::kKeyEnter))
+	{
+		//reset the game
+		stage = 0;
+		resetPositions();
+		Timer::stopTimer(11);
+		Timer::createTimer(11, 10.0f);
+	}
 
-	if (Timer::hasTimerFinished(11) && stage < 4) //if it is time for the next stage and the stage is less than 4
+	if (Timer::hasTimerFinished(11) && stage < 5) //if it is time for the next stage and the stage is less than 6
 	{
 		stage++;//next stage
 		maths::Mat43 m = maths::Mat43::kIdentity;
@@ -317,42 +325,17 @@ void update(float dt)
 		switch (stage)//set up the next stage
 		{
 		case 1:
-			// turn cues yellow and redeclares the cues
-			m.w.x = -19.5f;
-			m.w.z = -5.5f;
-			m.w.y = -0.5f;
 
-			colour.x = 1;
-			colour.y = 1;
-			colour.z = 0;
-			cue = new Box(m, colour, 1, false);
-			cue->render(g_prims);
-
-			m.w.z = 5.5f;
-
-			cue2 = new Box(m, colour, 1, false);
-			cue2->render(g_prims);
+			cue->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
+			cue2->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 
 			lockedZ = handPos.z; //sets the current hand z to the locked z
 
 			Timer::createTimer(11, 5.0f); //starts the 5 second timer for this stage
 			break;
 		case 2:
-			// turn cues green and redeclares the cues
-			m.w.x = -19.5f;
-			m.w.z = -5.5f;
-			m.w.y = -0.5f;
-
-			colour.x = 0;
-			colour.y = 1;
-			colour.z = 0;
-			cue = new Box(m, colour, 1, false);
-			cue->render(g_prims);
-
-			m.w.z = 5.5f;
-
-			cue2 = new Box(m, colour, 1, false);
-			cue2->render(g_prims);
+			cue->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
+			cue2->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
 
 			lockedX = handPos.x;// sets the current hand x to the locked x
 			lockedZ = handPos.z;
@@ -370,8 +353,16 @@ void update(float dt)
 
 			break; 
 		case 3:
-			Timer::createTimer(11, 10.0f); //auto throw the ball
-			jack->updateXVelocity(10.0f);
+			Timer::createTimer(11, 10.0f); //set time to reset the game after 10 seconds
+			jack->updateXVelocity(10.0f); //auto throw the ball
+			break;
+		case 4:
+			//reset the game
+			stage = 0;
+			resetPositions();
+			Timer::stopTimer(11);
+			Timer::createTimer(11, 10.0f);
+			break;
 		}
 	}
 	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enougth to be a throw
@@ -399,7 +390,9 @@ void update(float dt)
 			//cgg::logi("Right");
 		}*/
 		jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
-		stage = 5; //set the stage to 5 so it wont bother setting a new stage
+		//set the game to reset in 10 seconds
+		Timer::stopTimer(11);
+		Timer::createTimer(11, 10.0f);
 	}
 		
 	//ball ball collision check tests
@@ -480,6 +473,16 @@ void update(float dt)
 	Physics::applyFriction(blue);
 	Physics::applyFriction(jack);
 
+}
+
+//reset the positions
+void resetPositions()
+{
+	red->updatePosition(maths::Vec3(0.0f, -2.0f, 0.0f));
+	blue->updatePosition(maths::Vec3(8.0f, -2.0f, 0.0f));
+	jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
+	cue->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
+	cue2->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
