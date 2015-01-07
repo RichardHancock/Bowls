@@ -35,6 +35,8 @@ gl::RasterState* g_rasterState = 0;
 Jack* jack;
 Bowl* red;
 Bowl* blue;
+Ball* closestType;
+Ball* closestType2;
 Box* cue;
 Box* cue2;
 Box* ground;
@@ -90,6 +92,8 @@ void custom_gl_draw(gl::Device* device)
 	
 	g_prims->begin();
 
+	closestType->render(g_prims);
+	closestType2->render(g_prims);
 	cue->render(g_prims);
 	cue2->render(g_prims);
 	jack->render(g_prims);
@@ -167,6 +171,26 @@ void loadAssets()
 	colour.y = 1;
 	colour.z = 0;
 	jack = new Jack(m, colour, 0.5);
+
+	// generate a ball to show what team is closest
+	m.w.x = -19.5;
+	m.w.z = -5.5;
+	m.w.y = 0;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 1;
+	closestType = new Ball(m, colour, 0.5);
+
+	// generate a ball to show what team is closest
+	m.w.x = -19.5;
+	m.w.z = 5.5;
+	m.w.y = 0;
+
+	colour.x = 1;
+	colour.y = 1;
+	colour.z = 1;
+	closestType2 = new Ball(m, colour, 0.5);
 	
 	// generate a cue
 	m.w.x = -19.5f;
@@ -283,7 +307,6 @@ void kill()
 void update(float dt)
 {
 	Timer::update(dt);
-
 	kinect.update();
 	cgg::Vec3 handPos = kinect.getHandPos();
 
@@ -473,6 +496,37 @@ void update(float dt)
 	Physics::applyFriction(blue);
 	Physics::applyFriction(jack);
 
+	//update the closest ball
+	if(stage > 2)
+	{
+		if (getClosestBallType() == 'B')
+		{
+			closestType->updateColour(maths::Vec3(0.0f, 0.0f, 1.0f));
+			closestType2->updateColour(maths::Vec3(0.0f, 0.0f, 1.0f));
+		}
+		else
+		{
+			closestType->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
+			closestType2->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
+		}
+	}
+
+}
+
+//test the closest ball
+char getClosestBallType()
+{
+	char closestType;
+	float redDistance = Physics::distanceBetweenTospheres(red->getPosition(),jack->getPosition());
+	float blueDistance = Physics::distanceBetweenTospheres(blue->getPosition(), jack->getPosition());
+	if (redDistance < blueDistance)
+	{
+		return 'R';
+	}
+	else
+	{
+		return 'B';
+	}
 }
 
 //reset the positions
@@ -483,6 +537,8 @@ void resetPositions()
 	jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
 	cue->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 	cue2->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
+	closestType->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
+	closestType2->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
