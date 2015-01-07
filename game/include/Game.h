@@ -2,6 +2,7 @@
 #include "cgg/cgg.h"
 
 #include "Kinect.h"
+#include "Timer.h"
 
 #include "Bowl.h"
 #include "Jack.h"
@@ -29,11 +30,7 @@ private:
 	Ball* hand;
 
 	KinectInput* kinectSensor;
-	// These timers will mostly be used to have a turn timeout
-	// so if something glitches that the game will continue
-	float timerCurrentTime;
-	float timerMaxTime;
-
+	
 	const cgg::Vec3 redColour = { 1, 0, 0 };
 	const cgg::Vec3 blueColour = { 0, 0, 1 };
 	const cgg::Vec3 jackColour = { 1, 1, 0 };
@@ -44,7 +41,6 @@ private:
 	void playerTurnStart();
 	void throwBowl();
 
-	bool timerExpired();
 	inline int randomNumber(int minimum, int maximum)
 	{
 		return rand() % (maximum - minimum + 1) + minimum;

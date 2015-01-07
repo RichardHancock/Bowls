@@ -2,9 +2,7 @@
 
 Game::Game(bool sitMode, TrackingPoint hand)
 {
-	timerCurrentTime = 0;
-	timerMaxTime = -1;
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 	kinectSensor = new KinectInput(sitMode, hand);
 }
 
@@ -25,13 +23,6 @@ Game::~Game()
 
 void Game::update(float dt)
 {
-	// If the timer is set
-	if (timerMaxTime >= 0.0f)
-	{
-		//increment currentTime
-		timerCurrentTime += (1 * dt);
-	}
-
 	kinectSensor->update();
 }
 
@@ -83,19 +74,4 @@ void Game::playerTurnStart()
 void Game::throwBowl()
 {
 	
-}
-
-bool Game::timerExpired()
-{
-	if (timerCurrentTime < timerMaxTime)
-	{
-		return false;
-	}
-	else 
-	{
-		// reset timer and return true
-		timerMaxTime = -1;
-		timerCurrentTime = 0;
-		return true;
-	}
 }
