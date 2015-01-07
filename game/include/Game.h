@@ -54,11 +54,11 @@ private:
 	const cgg::Vec3 greenColour = { 0, 1, 0 };
 	const cgg::Vec3 whiteColour = { 1, 1, 1 };
 
-	const float bowlRadius = 1;
-	const float jackRadius = 0.5;
+	const float bowlRadius = 0.4;
+	const float jackRadius = 0.3;
+	float handOffset = -1.7f;
 
 	void playerTurnStart();
-	void throwBowl();
 	char getClosestBallType();
 	void resetPositions(cgg::MayaCamera &g_camera);
 	void ballWallCollisionTests(Ball *, float);

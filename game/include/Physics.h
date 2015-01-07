@@ -23,7 +23,7 @@ namespace Physics
 	@param float the current delta time
 	@return bool if the collision occurs
 	*/
-	float distanceBetweenTospheres(cgg::Vec3 sphere1Pos, cgg::Vec3 sphere2Pos);
+	float distanceBetweenTwoSpheres(cgg::Vec3 sphere1Pos, cgg::Vec3 sphere2Pos);
 
 	/**
 	Checks if 2 spheres collide

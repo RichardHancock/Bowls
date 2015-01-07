@@ -44,18 +44,18 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 	{
 	case 0:
 		// Kinect Input - moves in z axis
-		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, -1.5f, handPos.z));
+		hand->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, handOffset, handPos.z));
 		break;
 	case 1:
 	case 2:
 		// Kinect Input - moves in x axis
-		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, -1.5, lockedZ));
+		hand->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, handOffset, lockedZ));
 		break;
 	}
 
 	if (stage == 4)
 	{
-		g_camera.setCentreOfInterest(jack->getPosition());
+		g_camera.setCentreOfInterest(hand->getPosition());
 	}
 
 	if (cgg::isKeyPressed(cgg::kKeyEscape))
@@ -67,6 +67,10 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		//reset the game
 		stage = 0;
 		resetPositions(g_camera);
+		jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
+		closestBowlType[0]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
+		closestBowlType[1]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
+		handOffset = -1.5f;
 		Timer::stopTimer(11);
 		Timer::createTimer(11, 10.0f);
 	}
@@ -95,14 +99,28 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		case 3:
 			stage = 4;
 			Timer::createTimer(11, 10.0f); //set time to reset the game after 10 seconds
-			jack->updateXVelocity(10.0f); //auto throw the ball
+			hand->updateXVelocity(10.0f); //auto throw the ball
 			break;
 		case 5:
-			//reset the game
+			//change the ball
 			stage = 0;
 			resetPositions(g_camera);
 			Timer::stopTimer(11);
 			Timer::createTimer(11, 10.0f);
+			if (currentTurn == BluePlayer)
+			{
+				redBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), redColour, bowlRadius));
+				hand = redBowls[redBowls.size() - 1];
+				currentTurn = RedPlayer;
+				handOffset = -1.6f;
+			}
+			else if (currentTurn == RedPlayer)
+			{
+				blueBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), blueColour, bowlRadius));
+				hand = blueBowls[blueBowls.size() - 1];
+				currentTurn = BluePlayer;
+				handOffset = -1.6f;
+			}
 			break;
 		}
 	}
@@ -111,13 +129,13 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		float testTime = Timer::stopTimer(19); //get the time it took to throw
 		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow()) //check if the new velocity is greater than the max throw
 		{
-			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f); // if not times it by 10 and use it as the throw
+			hand->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f); // if not times it by 10 and use it as the throw
 		}
 		else
 		{
-			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
+			hand->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
 		}
-		jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
+		hand->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
 		stage = 4;//set the game to reset in 10 seconds
 		Timer::stopTimer(11);
 		Timer::createTimer(11, 10.0f);
@@ -159,19 +177,19 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 	//move balls & apply friction
 	for (int i = 0; i < redBowls.size(); i++)
 	{
-		redBowls[i]->changePosition(cgg::Vec3(redBowls[i]->getXVelocity() * dt, 0, redBowls[i]->getZVelocity() * dt));
+		redBowls[i]->changePosition(cgg::Vec3(redBowls[i]->getXVelocity() * dt, 0.0f, redBowls[i]->getZVelocity() * dt));
 		Physics::applyFriction(redBowls[i]);
 	}
 	for (int i = 0; i < blueBowls.size(); i++)
 	{
-		blueBowls[i]->changePosition(cgg::Vec3(blueBowls[i]->getXVelocity() * dt, 0, blueBowls[i]->getZVelocity() * dt));
+		blueBowls[i]->changePosition(cgg::Vec3(blueBowls[i]->getXVelocity() * dt, 0.0f, blueBowls[i]->getZVelocity() * dt));
 		Physics::applyFriction(blueBowls[i]);
 	}
-	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));	
+	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
 	Physics::applyFriction(jack);
 
 	//update the closest ball type
-	if (stage > 2)
+	if (stage > 2 && redBowls.size() > 0 || stage > 2 &&  blueBowls.size() > 0)
 	{
 		if (getClosestBallType() == 'B')
 		{
@@ -188,16 +206,9 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 
 void Game::loadWorld()
 {
-	//generate a red ball
-	redBowls.push_back(new Bowl(maths::Vec3(0.0f,-2.0f,0.0f), redColour, bowlRadius));
-	//generate a blue ball
-	blueBowls.push_back(new Bowl(maths::Vec3(8.0f, -2.0f, 0.0f), blueColour, bowlRadius));
-	// generate a jack
-	jack = new Jack(maths::Vec3(-20.0f, 0.0f, 0.0f), yellowColour, jackRadius);
-
 	// generate the balls to show what team is closest
-	closestBowlType[0] = new Ball(maths::Vec3(-19.5f, 0.0f, -5.5f), whiteColour, jackRadius);
-	closestBowlType[1] = new Ball(maths::Vec3(-19.5f, 0.0f, 5.5f), whiteColour, jackRadius);
+	closestBowlType[0] = new Ball(maths::Vec3(-19.5f, 0.0f, -5.5f), whiteColour, 0.5f);
+	closestBowlType[1] = new Ball(maths::Vec3(-19.5f, 0.0f, 5.5f), whiteColour, 0.5f);
 
 	// generate the cues
 	cues[0] = new Box(maths::Vec3(-19.5f, -0.5f, -5.5f), redColour, maths::Vec3(1.0f), false);
@@ -251,7 +262,11 @@ void Game::startGame()
 		cgg::logi("Red Player wins the coin toss, they go first");
 	}
 
-	//hand = new Jack(handPos, jackColour, jackRadius);
+	// generate a jack
+	jack = new Jack(maths::Vec3(-20.0f, 0.0f, 0.0f), yellowColour, jackRadius);
+
+	//set the jack to the players hand
+	hand = jack;
 	
 }
 
@@ -282,11 +297,6 @@ void Game::playerTurnStart()
 	}
 }
 
-void Game::throwBowl()
-{
-	
-}
-
 //test the closest ball
 char Game::getClosestBallType()
 {
@@ -295,18 +305,24 @@ char Game::getClosestBallType()
 	float blueDistance = 0.0f;
 	for (int i = 0; i < redBowls.size(); i++)
 	{
-		if (redDistance < Physics::distanceBetweenTospheres(redBowls[i]->getPosition(), jack->getPosition()))
+		if (redDistance < Physics::distanceBetweenTwoSpheres(redBowls[i]->getPosition(), jack->getPosition()))
 		{
-			redDistance = Physics::distanceBetweenTospheres(redBowls[i]->getPosition(), jack->getPosition());
+			redDistance = Physics::distanceBetweenTwoSpheres(redBowls[i]->getPosition(), jack->getPosition());
 		}
 	}
 	for (int i = 0; i < blueBowls.size(); i++)
 	{
-		if (blueDistance < Physics::distanceBetweenTospheres(blueBowls[i]->getPosition(), jack->getPosition()))
+		if (blueDistance < Physics::distanceBetweenTwoSpheres(blueBowls[i]->getPosition(), jack->getPosition()))
 		{
-			blueDistance = Physics::distanceBetweenTospheres(blueBowls[i]->getPosition(), jack->getPosition());
+			blueDistance = Physics::distanceBetweenTwoSpheres(blueBowls[i]->getPosition(), jack->getPosition());
 		}
 	}
+
+	if (blueBowls.size() <= 0)
+	{
+		blueDistance = 1000.0f;
+	}
+
 	if (redDistance < blueDistance)
 	{
 		return 'R';
@@ -320,13 +336,8 @@ char Game::getClosestBallType()
 //reset the positions
 void Game::resetPositions(cgg::MayaCamera &g_camera)
 {
-	redBowls[0]->updatePosition(maths::Vec3(0.0f, -2.0f, 0.0f));
-	blueBowls[0]->updatePosition(maths::Vec3(8.0f, -2.0f, 0.0f));
-	jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
 	cues[0]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 	cues[1]->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
-	closestBowlType[0]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
-	closestBowlType[1]->updateColour(maths::Vec3(1.0f, 1.0f, 1.0f));
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 }
 

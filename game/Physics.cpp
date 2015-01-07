@@ -3,7 +3,7 @@
 /*
 Works out the distance between two spheres
 */
-float Physics::distanceBetweenTospheres(cgg::Vec3 sphere1Pos, cgg::Vec3 sphere2Pos)
+float Physics::distanceBetweenTwoSpheres(cgg::Vec3 sphere1Pos, cgg::Vec3 sphere2Pos)
 {
 	// work out the difference in the coordinates of the 2 spheres
 	float deltaX = sphere1Pos.x - sphere2Pos.x;

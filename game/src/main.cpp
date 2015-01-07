@@ -91,6 +91,8 @@ void init()
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
+
+	game->startGame();
 }
 
 /// Loads the assets for the game
