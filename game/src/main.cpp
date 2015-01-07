@@ -48,6 +48,7 @@ KinectInput kinect(sitMode,hand);
 int stage = 0; //the current cue stage
 float lockedZ = 0.0f; // the z position to be used with input maths
 float lockedX = 0.0f; /// the x position to be used with input maths
+//bool ZLeft = false; USELESS CODE!!!!!!!
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -354,6 +355,16 @@ void update(float dt)
 			cue2->render(g_prims);
 
 			lockedX = handPos.x;// sets the current hand x to the locked x
+			lockedZ = handPos.z;
+			/*USELESS CODE!
+			if (lockedZ < 1)
+			{
+				ZLeft = true;
+			}
+			else
+			{
+				ZLeft = false;
+			}*/
 			Timer::createTimer(19, 10.0f); //sets ups the timer for the kinect input maths
 			Timer::createTimer(11, 10.0f); //sets up the backup timer so that it auto throws after 10 seconds
 
@@ -374,16 +385,20 @@ void update(float dt)
 		{
 			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
 		}
-		if (handPos.z < lockedZ) //check if the new z pos is on the left of the locked z position
+		/* USELESS CODE!!!!!!!!!!!!!!!
+		if (ZLeft && handPos.z < lockedZ
+			|| !ZLeft && handPos.z > lockedZ) //check if the new z pos is on the left of the locked z position
 		{
 			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f); //update the z velocity using the pos z - the locked z so velocity is -ve
-			//cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f).c_str());
+			//cgg::logi("left");
 		}
-		else //if on the right side of the screen
+		if (!ZLeft && handPos.z < lockedZ
+			|| ZLeft && handPos.z > lockedZ) //if on the right side of the screen
 		{
 			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f); //update the z velocity using the pos z + the locked z so velocity is +ve
-			//cgg::logi(std::to_string((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f).c_str());
-		}
+			//cgg::logi("Right");
+		}*/
+		jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
 		stage = 5; //set the stage to 5 so it wont bother setting a new stage
 	}
 		
