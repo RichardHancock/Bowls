@@ -3,6 +3,7 @@
 
 Audio::Audio(std::string filename, bool loop)
 {
+	chan = NULL;
 	int loopFlag = loop ? BASS_SAMPLE_LOOP : 0;
 	chan = BASS_StreamCreateFile(FALSE, filename.c_str(), 0, 0, loopFlag);
 	if (!chan)

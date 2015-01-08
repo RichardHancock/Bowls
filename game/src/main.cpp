@@ -33,7 +33,6 @@ gl::RasterState* g_rasterState = 0;
 
 Game * game = new Game(sitMode,hand);
 bool initish = BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, NULL);
-Audio* test = new Audio("assets/audio/test.mp3", true);
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -97,8 +96,6 @@ void init()
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
-	test->play(true);
-	game->startGame();
 }
 
 /// Loads the assets for the game
@@ -126,7 +123,7 @@ void loadAssets()
 	raster_desc.cullMode = gl::kCullBack;
 	g_rasterState = cgg::getGlDevice()->createRasterState(raster_desc);
 
-	
+	game->startGame();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
