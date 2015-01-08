@@ -9,6 +9,17 @@ Entity::Entity(cgg::Mat43 transform, cgg::Vec3 colour) : transform(transform), c
 	
 }
 
+Entity::Entity(cgg::Vec3 pos)
+{
+	transform = cgg::Mat43::kIdentity;
+	updatePosition(pos);
+}
+Entity::Entity(cgg::Vec3 pos, cgg::Vec3 colour) : colour(colour)
+{
+	transform = cgg::Mat43::kIdentity;
+	updatePosition(pos);
+}
+
 void Entity::changePosition(cgg::Vec3 adjustBy)
 {
 	transform.w.x += adjustBy.x;

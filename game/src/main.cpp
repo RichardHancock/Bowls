@@ -10,14 +10,13 @@
 #include "gl/DepthStencilState.h"
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
+#include "lib/bass.h"
 // Backend Includes
 #include "Kinect.h"
 #include "Timer.h"
+#include "Audio.h"
 // Game Components Includes
-#include "Jack.h"
-#include "Bowl.h"
-#include "Box.h"
-#include "Physics.h"
+#include "Game.h"
 
 // Maybe Include a way to set these (Menu, Command line argument or Hidden Key Combo)
 const TrackingPoint hand = RightHand; // Which hand to track
@@ -32,24 +31,9 @@ gl::Primitives* g_prims = 0;
 gl::DepthStencilState* g_depthStencilState = 0;
 gl::RasterState* g_rasterState = 0;
 
-Jack* jack;
-Bowl* red;
-Bowl* blue;
-Box* cue;
-Box* cue2;
-Box* ground;
-Box* endWall;
-Box* sideWall1;
-Box* sideWall2;
-
-KinectInput kinect(sitMode,hand);
-
-//Random Global needs deleting or refactoring
-int stage = 0; //the current cue stage
-float lockedZ = 0.0f; // the z position to be used with input maths
-float lockedX = 0.0f; /// the x position to be used with input maths
-//bool ZLeft = false; USELESS CODE!!!!!!!
-
+Game * game = new Game(sitMode,hand);
+bool initish = BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, NULL);
+Audio* test = new Audio("assets/audio/test.mp3", true);
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -90,15 +74,7 @@ void custom_gl_draw(gl::Device* device)
 	
 	g_prims->begin();
 
-	cue->render(g_prims);
-	cue2->render(g_prims);
-	jack->render(g_prims);
-	red->render(g_prims);
-	blue->render(g_prims);
-	ground->render(g_prims);
-	endWall->render(g_prims);
-	sideWall1->render(g_prims);
-	sideWall2->render(g_prims);
+	game->render(g_prims);
 
 	g_prims->end();
 
@@ -111,15 +87,18 @@ void custom_gl_draw(gl::Device* device)
 //------------------------------------------------------------------------------------------------------------------------------------
 void init()
 {
+	if (HIWORD(BASS_GetVersion()) != BASSVERSION)
+	{
+		cgg::loge("Wrong Version");
+	}
 	cgg::fullScreen(true);
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
-	
-	// TODO: Might need a conditional to check here for errors
-	kinect.startTracking();
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
+	test->play(true);
+	game->startGame();
 }
 
 /// Loads the assets for the game
@@ -129,114 +108,10 @@ void loadAssets()
 	g_prims = new gl::Primitives;
 
 	// init openGL data
-	g_prims->initGL(cgg::getGlDevice());
+	g_prims->initGL(cgg::getGlDevice());	
 
-	// start constructing some shapes
-	g_prims->begin();
-
-	// generate a red sphere
-	maths::Mat43 m = maths::Mat43::kIdentity;
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -2;
-
-	maths::Vec3 colour;
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	red = new Bowl(m, colour,1);
-	red->render(g_prims);
-
-	// generate a blue sphere
-	m.w.x = 8;
-	m.w.z = 0;
-	m.w.y = -2;
-
-	colour.x = 0;
-	colour.y = 0;
-	colour.z = 1;
-	blue = new Bowl(m, colour, 1);
-	blue->render(g_prims);
-
-	// generate a jack
-	m.w.x = -20;
-	m.w.z = 0;
-	m.w.y = 0;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 0;
-	jack = new Jack(m, colour, 0.5);
-	
-	// generate a cue
-	m.w.x = -19.5f;
-	m.w.z = -5.5f;
-	m.w.y = -0.5f;
-
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	cue = new Box(m, colour, 1, false);
-	cue->render(g_prims);
-
-	// generate a cue
-	m.w.x = -19.5f;
-	m.w.z = 5.5f;
-	m.w.y = -0.5f;
-
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	cue2 = new Box(m, colour, 1, false);
-	cue2->render(g_prims);
-
-	// generate ground
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -4;
-
-	colour.x = 0;
-	colour.y = 1;
-	colour.z = 0;
-	ground = new Box(m, colour, cgg::Vec3(40, 2, 10), false);
-	ground->render(g_prims);
-
-	// generate endWall
-	m.w.x = 20.5f;
-	m.w.z = 0;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	endWall = new Box(m, colour, cgg::Vec3(1, 4, 12), true);
-	endWall->render(g_prims);
-
-	// generate sideWall1
-	m.w.x = 0;
-	m.w.z = -5.5f;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	sideWall1 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
-	sideWall1->render(g_prims);
-
-	// generate sideWall2
-	m.w.x = 0;
-	m.w.z = 5.5f;
-	m.w.y = -3;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 1;
-	sideWall2 = new Box(m, colour, cgg::Vec3(40, 4, 1), false);
-	sideWall2->render(g_prims);
-
-	//End the group of primitives
-	g_prims->end();
-	
+	//load the world
+	game->loadWorld();
 	
 	//Need to investigate what these do(ATM keep because stuff breaks if not kept)
 	// enable depth testing
@@ -251,8 +126,6 @@ void loadAssets()
 	raster_desc.cullMode = gl::kCullBack;
 	g_rasterState = cgg::getGlDevice()->createRasterState(raster_desc);
 
-	// setup inital cue timer
-	Timer::createTimer(11, 10.0f);
 	
 }
 
@@ -283,206 +156,8 @@ void kill()
 void update(float dt)
 {
 	Timer::update(dt);
+	game->update(dt, g_camera);
 
-	kinect.update();
-	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
-
-	switch (stage)//moves the kinect on screen differently depending on the stage
-	{
-	case 0:
-		// Kinect Input - moves in z axis
-		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(-5, -1.5f, handPos.z));
-		break;
-	case 1:
-	case 2:
-		// Kinect Input - moves in x axis
-		jack->updatePosition(cgg::Vec3(-17, -1, 0) + cgg::Vec3(handPos.x, -1.5, lockedZ));
-		break;
-	}
-
-	//jack->updatePosition(cgg::Vec3(-17, -1, 0) + handPos);
-
-	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
-
-	if (cgg::isKeyPressed(cgg::kKeyEscape))
-	{
-		exit(0);
-	}
-	if (cgg::isKeyPressed(cgg::kKeyEnter))
-	{
-		//reset the game
-		stage = 0;
-		resetPositions();
-		Timer::stopTimer(11);
-		Timer::createTimer(11, 10.0f);
-	}
-
-	if (Timer::hasTimerFinished(11) && stage < 5) //if it is time for the next stage and the stage is less than 6
-	{
-		stage++;//next stage
-		maths::Mat43 m = maths::Mat43::kIdentity;
-		maths::Vec3 colour;
-		switch (stage)//set up the next stage
-		{
-		case 1:
-
-			cue->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
-			cue2->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
-
-			lockedZ = handPos.z; //sets the current hand z to the locked z
-
-			Timer::createTimer(11, 5.0f); //starts the 5 second timer for this stage
-			break;
-		case 2:
-			cue->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
-			cue2->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
-
-			lockedX = handPos.x;// sets the current hand x to the locked x
-			lockedZ = handPos.z;
-			/*USELESS CODE!
-			if (lockedZ < 1)
-			{
-				ZLeft = true;
-			}
-			else
-			{
-				ZLeft = false;
-			}*/
-			Timer::createTimer(19, 10.0f); //sets ups the timer for the kinect input maths
-			Timer::createTimer(11, 10.0f); //sets up the backup timer so that it auto throws after 10 seconds
-
-			break; 
-		case 3:
-			Timer::createTimer(11, 10.0f); //set time to reset the game after 10 seconds
-			jack->updateXVelocity(10.0f); //auto throw the ball
-			break;
-		case 4:
-			//reset the game
-			stage = 0;
-			resetPositions();
-			Timer::stopTimer(11);
-			Timer::createTimer(11, 10.0f);
-			break;
-		}
-	}
-	if (stage == 2 && handPos.x > lockedX + 3.0f) //check if the current stage is throw and if so check if the hand has moved far enougth to be a throw
-	{
-		float testTime = Timer::stopTimer(19); //get the time it took to throw
-		if ((Physics::kinectInputVelocity(3.0f, testTime)) < jack->getThrow()) //check if the new velocity is greater than the max throw
-		{
-			jack->updateXVelocity((Physics::kinectInputVelocity(3.0f, testTime))*10.0f); // if not times it by 10 and use it as the throw
-		}
-		else
-		{
-			jack->updateXVelocity(jack->getThrow()*10.0f); // if so set the throw to the max
-		}
-		/* USELESS CODE!!!!!!!!!!!!!!!
-		if (ZLeft && handPos.z < lockedZ
-			|| !ZLeft && handPos.z > lockedZ) //check if the new z pos is on the left of the locked z position
-		{
-			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f); //update the z velocity using the pos z - the locked z so velocity is -ve
-			//cgg::logi("left");
-		}
-		if (!ZLeft && handPos.z < lockedZ
-			|| ZLeft && handPos.z > lockedZ) //if on the right side of the screen
-		{
-			jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z + lockedZ), testTime))*10.0f); //update the z velocity using the pos z + the locked z so velocity is +ve
-			//cgg::logi("Right");
-		}*/
-		jack->updateZVelocity((Physics::kinectInputVelocity((handPos.z - lockedZ), testTime))*10.0f);
-		//set the game to reset in 10 seconds
-		Timer::stopTimer(11);
-		Timer::createTimer(11, 10.0f);
-	}
-		
-	//ball ball collision check tests
-	if (Physics::collisionCheck(red, blue, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, blue);
-	}
-	if (Physics::collisionCheck(red, jack, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, jack);
-	}
-	if (Physics::collisionCheck(blue, jack, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, jack);
-	}
-	if (Physics::collisionCheck(red, blue, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, blue);
-	}
-	//wall wall collision tests
-	if (Physics::collisionCheck(jack, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, endWall);
-	}
-	if (Physics::collisionCheck(jack, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, sideWall1);
-	}
-	if (Physics::collisionCheck(jack, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(jack, sideWall2);
-	}
-	if (Physics::collisionCheck(blue, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, endWall);
-	}
-	if (Physics::collisionCheck(blue, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, sideWall1);
-	}
-	if (Physics::collisionCheck(blue, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(blue, sideWall2);
-	}
-	if (Physics::collisionCheck(blue, endWall, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, endWall);
-	}
-	if (Physics::collisionCheck(red, sideWall1, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, sideWall1);
-	}
-	if (Physics::collisionCheck(red, sideWall2, dt))
-	{
-		//new velocities
-		Physics::newCollisionVelocities(red, sideWall2);
-	}
-
-	//move balls
-	red->changePosition(cgg::Vec3(red->getXVelocity() * dt,	0, red->getZVelocity() * dt));
-	blue->changePosition(cgg::Vec3(blue->getXVelocity() * dt, 0, blue->getZVelocity() * dt));
-	jack->changePosition(cgg::Vec3(jack->getXVelocity() * dt, 0, jack->getZVelocity() * dt));
-
-	//friction
-	Physics::applyFriction(red);
-	Physics::applyFriction(blue);
-	Physics::applyFriction(jack);
-
-}
-
-//reset the positions
-void resetPositions()
-{
-	red->updatePosition(maths::Vec3(0.0f, -2.0f, 0.0f));
-	blue->updatePosition(maths::Vec3(8.0f, -2.0f, 0.0f));
-	jack->updatePosition(maths::Vec3(-20.0f, 0.0f, 0.0f));
-	cue->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
-	cue2->updateColour(maths::Vec3(1.0f, 0.0f, 0.0f));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -564,21 +239,6 @@ void mouseMove(int32_t x, int32_t y)
 
 	g_lastX = x;
 	g_lastY = y;
-}
-
-cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
-{
-	//Scale it up a bit to make movements noticeable
-	pos *= 5;
-
-	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
-	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
-	
-	flippedKinectPos.x = -pos.z;
-	flippedKinectPos.y = pos.y;
-	flippedKinectPos.z = pos.x;
-	
-	return flippedKinectPos;
 }
 
 // main is buried inside this macro!

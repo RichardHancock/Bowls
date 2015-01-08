@@ -12,6 +12,16 @@ CollisionEntity::CollisionEntity(cgg::Mat43 transform, cgg::Vec3 colour)
 	velocities = { 0.0f, 0.0f, 0.0f };
 }
 
+CollisionEntity::CollisionEntity(cgg::Vec3 pos)
+	: Entity(pos)
+{
+	velocities = { 0.0f, 0.0f, 0.0f };
+}
+CollisionEntity::CollisionEntity(cgg::Vec3 pos, cgg::Vec3 colour)
+	: Entity(pos, colour)
+{
+	velocities = { 0.0f, 0.0f, 0.0f };
+}
 //velocities
 void CollisionEntity::updateXVelocity(float x)
 {

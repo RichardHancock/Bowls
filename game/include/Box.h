@@ -21,6 +21,7 @@ public:
 
 	@todo Find a way to copy the transform into the dimension Vec3 otherwise this crashes.
 	@param cgg::Mat43 The transformation matrix
+	@param bool if on the x axis
 	*/
 	Box(cgg::Mat43, bool);
 
@@ -32,6 +33,7 @@ public:
 	@param cgg::Mat43 - The transformation matrix
 	@param cgg::Vec3 - Contains the colour r,g,b values
 	@param cgg::Vec3 - Dimensions contains the width, height and depth (In that order)
+	@param bool if on the x axis
 	*/
 	Box(cgg::Mat43, cgg::Vec3, cgg::Vec3, bool);
 
@@ -45,8 +47,46 @@ public:
 	@param float - Width of the Box
 	@param float - Height of the Box
 	@param float - Depth of the Box
+	@param bool if on the x axis
 	*/
 	Box(cgg::Mat43, cgg::Vec3, float, float, float, bool);
+
+	/**
+	BROKEN - Create a Box object
+
+	BROKEN - Creates a Box object using the passed in transform.
+
+	@todo Find a way to copy the transform into the dimension Vec3 otherwise this crashes.
+	@param cgg::Vec3 - Position
+	@param bool if on the x axis
+	*/
+	Box(cgg::Vec3, bool);
+
+	/**
+	Create a Box object
+
+	Creates a Box object using the passed in transform, colour and dimensions.
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	@param cgg::Vec3 - Dimensions contains the width, height and depth (In that order)
+	@param bool if on the x axis
+	*/
+	Box(cgg::Vec3, cgg::Vec3, cgg::Vec3, bool);
+
+	/**
+	Create a Box object
+
+	Creates a Box object using the passed in transform, colour and individual dimensions.
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	@param float - Width of the Box
+	@param float - Height of the Box
+	@param float - Depth of the Box
+	@param bool if on the x axis
+	*/
+	Box(cgg::Vec3, cgg::Vec3, float, float, float, bool);
 
 	/**
 	Renders a box
@@ -57,9 +97,32 @@ public:
 	*/
 	void render(gl::Primitives*);
 
+	/**
+	Returns the width of the Box
+
+	@returns float the width
+	*/
 	float getWidth();
+
+	/**
+	Returns the depth of the Box
+
+	@returns float the depth
+	*/
 	float getDepth();
+
+	/**
+	Returns the height of the Box
+
+	@returns float the height
+	*/
 	float getHeight();
+
+	/**
+	Returns the if the axis is x or y, if x then true
+
+	@returns bool the x axis boolean
+	*/
 	bool xAxisCheck();
 
 protected:

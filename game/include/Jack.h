@@ -34,6 +34,26 @@ public:
 	Jack(cgg::Mat43, cgg::Vec3, float);
 
 	/**
+	Create a Jack object
+
+	Creates a Jack object using the passed in transform. Colour and radius are set to internal defaults.
+
+	@param cgg::Vec3 - Position
+	*/
+	Jack(cgg::Vec3);
+
+	/**
+	Create a Jack object
+
+	Creates a Jack object using the passed in transform, colour and radius.
+
+	@param cgg::Vec3 - Position
+	@param cgg::Vec3 - Contains the colour r,g,b values
+	@param float - Float value containing the radius of the sphere
+	*/
+	Jack(cgg::Vec3, cgg::Vec3, float);
+
+	/**
 	Renders a sphere
 
 	Creates a sphere using the objects internal values and passes it into primitiveList.

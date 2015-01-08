@@ -21,6 +21,27 @@ Box::Box(cgg::Mat43 transform, cgg::Vec3 colour, float w, float h, float d, bool
 	xAxis = inAxis;
 }
 
+Box::Box(cgg::Vec3 pos, bool inAxis)
+	: CollisionEntity(pos)
+{
+	colour.x = 1;
+	colour.y = 0;
+	colour.z = 1;
+	xAxis = inAxis;
+}
+
+Box::Box(cgg::Vec3 pos, cgg::Vec3 colour, cgg::Vec3 dimensions, bool inAxis)
+	: CollisionEntity(pos, colour), dimensions(dimensions)
+{
+	xAxis = inAxis;
+}
+
+Box::Box(cgg::Vec3 pos, cgg::Vec3 colour, float w, float h, float d, bool inAxis)
+	: CollisionEntity(pos, colour), dimensions(cgg::Vec3(w, h, d))
+{
+	xAxis = inAxis;
+}
+
 void Box::render(gl::Primitives* primitiveList)
 {
 	primitiveList->box(transform,colour,dimensions.x,dimensions.y,dimensions.z);
