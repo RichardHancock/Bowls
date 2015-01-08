@@ -10,12 +10,13 @@
 #include "gl/DepthStencilState.h"
 #include "gl/RasterState.h"
 #include "maths/MayaCamera.h"
+#include "lib/bass.h"
 // Backend Includes
 #include "Kinect.h"
+#include "Timer.h"
+#include "Audio.h"
 // Game Components Includes
-#include "Jack.h"
-#include "Bowl.h"
-#include "Box.h"
+#include "Game.h"
 
 // Maybe Include a way to set these (Menu, Command line argument or Hidden Key Combo)
 const TrackingPoint hand = RightHand; // Which hand to track
@@ -30,11 +31,8 @@ gl::Primitives* g_prims = 0;
 gl::DepthStencilState* g_depthStencilState = 0;
 gl::RasterState* g_rasterState = 0;
 
-Jack* jack;
-Bowl* red;
-Bowl* blue;
-Box* ground;
-KinectInput kinect(sitMode,hand);
+Game * game = new Game(sitMode,hand);
+bool initish = BASS_Init(-1, 44100, BASS_DEVICE_DEFAULT, 0, NULL);
 //----------------------------------------------------------------------------------------------------------------------
 
 
@@ -75,10 +73,7 @@ void custom_gl_draw(gl::Device* device)
 	
 	g_prims->begin();
 
-	jack->render(g_prims);
-	red->render(g_prims);
-	blue->render(g_prims);
-	ground->render(g_prims);
+	game->render(g_prims);
 
 	g_prims->end();
 
@@ -91,11 +86,13 @@ void custom_gl_draw(gl::Device* device)
 //------------------------------------------------------------------------------------------------------------------------------------
 void init()
 {
+	if (HIWORD(BASS_GetVersion()) != BASSVERSION)
+	{
+		cgg::loge("Wrong Version");
+	}
+	cgg::fullScreen(true);
 	// use a custom openGL renderer (draw2D and draw3D will no longer be called)
 	cgg::setFullCustomDraw(custom_gl_draw);
-	
-	// TODO: Might need a conditional to check here for errors
-	kinect.startTracking();
 
 	g_camera.setCentreOfInterest(cgg::Vec3(-20, 0, 0));
 	g_camera.rotate(cgg::HALF_PI /2, -0.25);
@@ -108,60 +105,10 @@ void loadAssets()
 	g_prims = new gl::Primitives;
 
 	// init openGL data
-	g_prims->initGL(cgg::getGlDevice());
+	g_prims->initGL(cgg::getGlDevice());	
 
-	// start constructing some shapes
-	g_prims->begin();
-
-	// generate a red sphere
-	maths::Mat43 m = maths::Mat43::kIdentity;
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -2;
-
-	maths::Vec3 colour;
-	colour.x = 1;
-	colour.y = 0;
-	colour.z = 0;
-	red = new Bowl(m, colour,1);
-	red->render(g_prims);
-
-	// generate a blue sphere
-	m.w.x = 2;
-	m.w.z = 3;
-	m.w.y = -2;
-
-	colour.x = 0;
-	colour.y = 0;
-	colour.z = 1;
-	blue = new Bowl(m, colour, 1);
-	blue->render(g_prims);
-
-	// generate a jack
-	m.w.x = -20;
-	m.w.z = 0;
-	m.w.y = 0;
-
-	colour.x = 1;
-	colour.y = 1;
-	colour.z = 0;
-	jack = new Jack(m, colour, 0.5);
-	
-
-	// generate a box
-	m.w.x = 0;
-	m.w.z = 0;
-	m.w.y = -4;
-
-	colour.x = 0;
-	colour.y = 1;
-	colour.z = 0;
-	ground = new Box(m, colour, cgg::Vec3(40, 2, 10));
-	ground->render(g_prims);
-
-	//End the group of primitives
-	g_prims->end();
-	
+	//load the world
+	game->loadWorld();
 	
 	//Need to investigate what these do(ATM keep because stuff breaks if not kept)
 	// enable depth testing
@@ -175,7 +122,8 @@ void loadAssets()
 	raster_desc.init();
 	raster_desc.cullMode = gl::kCullBack;
 	g_rasterState = cgg::getGlDevice()->createRasterState(raster_desc);
-	
+
+	game->startGame();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------
@@ -198,66 +146,14 @@ void kill()
 	exit(0);
 }
 
-// Dirty Global for movement (REMOVE LATER)
-bool Forwards = true;
-bool Forwards2 = true;
-
 //------------------------------------------------------------------------------------------------------------------------------------
 /// When the application is updated, this function will be called. The 'dt' parameter is the time (in seconds) since the last time
 /// the game was updated. Use 'dt' when animating things in your game.
 //------------------------------------------------------------------------------------------------------------------------------------
 void update(float dt)
 {
-	if (cgg::isKeyPressed(cgg::kKeyEscape))
-	{
-		exit(0);
-	}
-	
-	kinect.update();
-	cgg::Vec3 handPos = kinectPosConversion(kinect.getHandPos());
-
-	// Kinect Test (Really Hacky)
-	jack->updatePosition(cgg::Vec3(-17,-1,0) + handPos);
-	//g_camera.track(jack->getPosition().x, jack->getPosition().y);
-
-	//Quick Hack for movement
-	int speed = 4;
-	if (Forwards)
-	{
-		red->changePosition(cgg::Vec3(speed * dt, 0, 0));
-	}
-	else
-	{
-		red->changePosition(cgg::Vec3(-speed * dt, 0, 0));
-	}
-
-	if (red->getPosition().x >= 20.0)
-	{
-		Forwards = false;
-	}
-	if (red->getPosition().x <= -20.0)
-	{
-		Forwards = true;
-	}
-
-	//blue
-	if (Forwards2)
-	{
-		blue->changePosition(cgg::Vec3(0, 0, speed * dt));
-	}
-	else
-	{
-		blue->changePosition(cgg::Vec3(0, 0, -speed * dt));
-	}
-
-	if (blue->getPosition().z >= 5.0)
-	{
-		Forwards2 = false;
-	}
-	if (blue->getPosition().z <= -5.0)
-	{
-		Forwards2 = true;
-	}
+	Timer::update(dt);
+	game->update(dt, g_camera);
 
 }
 
@@ -340,21 +236,6 @@ void mouseMove(int32_t x, int32_t y)
 
 	g_lastX = x;
 	g_lastY = y;
-}
-
-cgg::Vec3 kinectPosConversion(cgg::Vec3 pos)
-{
-	//Scale it up a bit to make movements noticeable
-	pos *= 5;
-
-	//If you don't initialize Vec3 similar to this they error (libCGG 'Feature')
-	cgg::Vec3 flippedKinectPos = { 0, 0, 0 };
-	
-	flippedKinectPos.x = -pos.z;
-	flippedKinectPos.y = pos.y;
-	flippedKinectPos.z = pos.x;
-	
-	return flippedKinectPos;
 }
 
 // main is buried inside this macro!

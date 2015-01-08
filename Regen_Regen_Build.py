@@ -61,10 +61,16 @@ def find_all_in_vcxproj(array, search_string):
 def append_lib(lineToModify):
     pos = lineToModify.rfind(";")
     firstSec = lineToModify[:pos+1]
-    secondSec = "Kinect10.lib;" + lineToModify[pos+1:]
+    secondSec = "Kinect10.lib;bass.lib;winmm.lib;" + lineToModify[pos+1:]
     result = firstSec + secondSec
     return result
 
+def append_lib_path(lineToModify):
+    pos = lineToModify.rfind("<")
+    firstSec = lineToModify[:pos]
+    secondSec = ";$(SolutionDir)\\Bowls\\game\\lib\\;" + lineToModify[pos:]
+    result = firstSec + secondSec
+    return result
 
 def check_for_vcx_version(array):
     i = 0
@@ -108,6 +114,7 @@ newLines64 = [
 
 vcIncPathsSearch = "$(UserRootDir)"
 librarySearch = "/AdditionalDependencies"
+libraryPathSearch = "/AdditionalLibraryDirectories"
 check_for_vcx_version(vcx_paths)
 
 for fileExists, filePath in vcx_paths:
@@ -129,6 +136,10 @@ for fileExists, filePath in vcx_paths:
         libraryIndexs = find_all_in_vcxproj(lines, librarySearch)
         for libraryIndex in libraryIndexs:
             lines[libraryIndex] = append_lib(lines[libraryIndex])
+
+        libraryPathIndexes = find_all_in_vcxproj(lines, libraryPathSearch)
+        for libraryPathIndex in libraryPathIndexes:
+            lines[libraryPathIndex] = append_lib_path(lines[libraryPathIndex])
 
         """Overwrite original file"""
         file.seek(0)
