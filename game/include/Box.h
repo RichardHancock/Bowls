@@ -97,9 +97,32 @@ public:
 	*/
 	void render(gl::Primitives*);
 
+	/**
+	Returns the width of the Box
+
+	@returns float the width
+	*/
 	float getWidth();
+
+	/**
+	Returns the depth of the Box
+
+	@returns float the depth
+	*/
 	float getDepth();
+
+	/**
+	Returns the height of the Box
+
+	@returns float the height
+	*/
 	float getHeight();
+
+	/**
+	Returns the if the axis is x or y, if x then true
+
+	@returns bool the x axis boolean
+	*/
 	bool xAxisCheck();
 
 protected:
