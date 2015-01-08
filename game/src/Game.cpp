@@ -100,6 +100,8 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		redScore = 0;
 		Timer::stopTimer(11);
 		Timer::createTimer(11, aimStage);
+		//aim cue
+		aimCue->play(true);
 	}
 
 	if (Timer::hasTimerFinished(11) && stage < 5) //if it is time for the next stage and the stage is less than 6
@@ -110,6 +112,8 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 		switch (stage)//set up the next stage
 		{
 		case 1:
+			//arm cue
+			armCue->play(true);
 			cues[0]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 			cues[1]->updateColour(maths::Vec3(1.0f, 1.0f, 0.0f));
 			lockedZ = handPos.z; //sets the current hand z to the locked z
@@ -120,6 +124,8 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 			cues[1]->updateColour(maths::Vec3(0.0f, 1.0f, 0.0f));
 			lockedX = handPos.x;// sets the current hand x to the locked x
 			lockedZ = handPos.z;
+			//throw cue
+			throwCue->play(true);
 			Timer::createTimer(19, throwStage); //sets ups the timer for the kinect input maths
 			Timer::createTimer(11, autoThrowTime); //sets up the backup timer so that it auto throws after 10 seconds
 			break;
@@ -144,6 +150,8 @@ void Game::update(float dt, cgg::MayaCamera &g_camera)
 				resetPositions(g_camera);
 				Timer::stopTimer(11);
 				Timer::createTimer(11, aimStage);
+				//aim cue
+				aimCue->play(true);
 				if (currentTurn == BluePlayer)
 				{
 					redBowls.push_back(new Bowl(maths::Vec3(-20.0f, 0.0f, 0.0f), redColour, bowlRadius));
@@ -247,6 +255,20 @@ void Game::loadWorld()
 
 	// generate sideWall2
 	sideWall2 = new Box(maths::Vec3(0.0f, -3.0f, 5.5f), whiteColour, cgg::Vec3(40, 4, 1), false);
+
+	//load audio
+	/*
+	[Feelin Good] Kevin MacLeod(incompetech.com)
+	Licensed under Creative Commons : By Attribution 3.0
+	http ://creativecommons.org/licenses/by/3.0/
+	*/
+	music = new Audio("assets/audio/Feelin Good.mp3", true);
+	aimCue = new Audio("assets/audio/aim.mp3", false);
+	armCue = new Audio("assets/audio/armBack.mp3", false);
+	throwCue = new Audio("assets/audio/throw.mp3", false);
+
+	//starts background music
+	music->play(true);
 }
 
 void Game::render(gl::Primitives* g_prims)
@@ -300,6 +322,8 @@ void Game::startGame()
 
 	// setup initial cue timer
 	Timer::createTimer(11, aimStage);
+	//aim cue
+	aimCue->play(true);
 }
 
 void Game::playerTurnStart()

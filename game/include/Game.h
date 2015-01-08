@@ -7,6 +7,7 @@
 #include "Bowl.h"
 #include "Jack.h"
 #include "Physics.h"
+#include "Audio.h"
 
 /// an eNum to identify the current players turn
 enum PlayerName
@@ -76,6 +77,12 @@ private:
 	Box* endWall;
 	Box* sideWall1;
 	Box* sideWall2;
+
+	//Audio data
+	Audio* music;
+	Audio* aimCue;
+	Audio* armCue;
+	Audio* throwCue;
 
 	///kinect data
 	KinectInput* kinectSensor;
